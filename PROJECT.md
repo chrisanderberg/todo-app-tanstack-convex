@@ -1,25 +1,40 @@
 # PROJECT.md
 
 ## Overview
-This project is a [PROJECT_TYPE] for [PRIMARY_PROBLEM].
+This project is a local-first MVP web app called `Eisenhower Todo` for
+capturing, ranking, and resolving personal tasks.
+
+The product is inspired by the Eisenhower method, but it does not place tasks
+into fixed quadrants. Instead, each task lives in two independent ordered
+lists: one for importance and one for urgency. The app derives percentiles from
+those orderings and visualizes tasks on a 2D matrix scatter plot.
 
 The current intent is to build something practical quickly, learn through
 implementation, and keep the project documentation aligned with reality instead
 of maintaining a large speculative spec.
 
 ## Goals
-- [GOAL_1]
-- [GOAL_2]
-- [GOAL_3]
+- Deliver a working single-user local-first MVP using TanStack Start,
+  TypeScript, Tailwind CSS, shadcn/ui, Convex, and Nivo.
+- Make ranking the core interaction by letting users insert and reorder tasks
+  independently by importance and urgency.
+- Visualize the derived importance and urgency percentiles in a main matrix
+  view, a mini matrix context view, and a supporting list/detail workflow.
 
 ## Non-goals
-- [NON_GOAL_1]
-- [NON_GOAL_2]
+- Do not implement hard quadrant classification logic for tasks.
+- Do not implement AI-generated rankings in v1, even though the ranking system
+  should be designed so AI ranking can be added later.
+- Do not build multi-user collaboration, sync conflict resolution, or a broad
+  team workflow for this MVP.
 
 ## Core domain concepts
-- [DOMAIN_CONCEPT_1]
-- [DOMAIN_CONCEPT_2]
-- [DOMAIN_CONCEPT_3]
+- Todo item
+- Independent importance ranking
+- Independent urgency ranking
+- Derived percentile-based matrix position
+- Resolution type: `do`, `schedule`, `delegate`, or `drop`
+- Task lifecycle state: `active`, `completed`, or `archived`
 
 ## Current instruction model
 - `AGENTS.md` defines how agents should operate in this worktree.

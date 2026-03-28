@@ -45,6 +45,12 @@
   when practical.
 - Add brief comments only where intent or invariants are not obvious from the
   code.
+- Treat ranking behavior as critical domain logic. Keep the ranking math easy
+  to test and avoid burying it inside UI components.
+- Preserve the distinction between ordered ranks and derived percentiles.
+  Do not replace the ranking model with raw numeric scoring.
+- Keep fixed quadrant logic out of the product unless the human explicitly asks
+  for it later.
 
 ## Definition of done
 - The relevant tests pass.
@@ -58,7 +64,6 @@
 
 ## Commands
 ```bash
-# Replace these with the real project commands early in setup.
-make test
-make run
+# Set these to the real project commands as soon as scaffolding is complete.
+# Until then, do not invent command names in docs or final status reports.
 ```

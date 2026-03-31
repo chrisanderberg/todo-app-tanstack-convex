@@ -25,6 +25,8 @@ function MatrixRoute() {
   const rankingChoices = useRankingChoices()
   const { createTask, seedData, updateTask } = useTaskActions()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [seedError, setSeedError] = useState<string | null>(null)
   const summary = getDashboardSummary(points)
   const createInitialValues = useMemo(
     () =>
@@ -58,9 +60,29 @@ function MatrixRoute() {
       <section className="dashboard-grid">
         {points.length === 0 ? (
           <TaskEmptyState
+            errorMessage={seedError}
+            isSeeding={isSeeding}
             onCreate={() => setIsCreateOpen(true)}
             onSeed={async () => {
-              await seedData({})
+              if (isSeeding) {
+                return
+              }
+
+              setSeedError(null)
+              setIsSeeding(true)
+
+              try {
+                await seedData({})
+              } catch (error) {
+                console.error('Failed to seed sample tasks.', error)
+                setSeedError(
+                  error instanceof Error
+                    ? error.message
+                    : 'Unable to load sample tasks right now.',
+                )
+              } finally {
+                setIsSeeding(false)
+              }
             }}
           />
         ) : (

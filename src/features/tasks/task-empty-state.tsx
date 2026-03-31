@@ -3,9 +3,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function TaskEmptyState({
+  errorMessage,
+  isSeeding = false,
   onSeed,
   onCreate,
 }: {
+  errorMessage?: string | null
+  isSeeding?: boolean
   onSeed: () => void | Promise<void>
   onCreate: () => void
 }) {
@@ -34,11 +38,16 @@ export function TaskEmptyState({
             Open any task to edit details, due dates, and resolution plans.
           </div>
         </div>
+        {errorMessage ? (
+          <p className="rounded-[1rem] border border-[rgba(181,86,57,0.16)] bg-[rgba(181,86,57,0.08)] px-4 py-3 text-sm text-[var(--tone-drop)]">
+            {errorMessage}
+          </p>
+        ) : null}
         <div className="flex flex-wrap gap-3">
         <Button onClick={onCreate}>Create first task</Button>
-        <Button variant="secondary" onClick={() => void onSeed()}>
+        <Button disabled={isSeeding} variant="secondary" onClick={() => void onSeed()}>
           <Sparkles className="h-4 w-4" />
-          Load sample tasks
+          {isSeeding ? 'Loading sample tasks...' : 'Load sample tasks'}
         </Button>
         </div>
       </CardContent>

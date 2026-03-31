@@ -64,6 +64,10 @@
 
 ## Commands
 ```bash
-# Set these to the real project commands as soon as scaffolding is complete.
-# Until then, do not invent command names in docs or final status reports.
+npm run convex:dev
+npm run seed
+npm run dev
+npm run test
+npm run typecheck
+npm run build
 ```

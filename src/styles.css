@@ -1,0 +1,231 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+}
+
+:root {
+  --bg: #f4ede1;
+  --paper: #fdf8f0;
+  --panel: rgba(255, 251, 244, 0.86);
+  --panel-soft: rgba(248, 240, 228, 0.74);
+  --ink: #2f2722;
+  --muted-ink: #72655c;
+  --accent-ink: #6c3926;
+  --accent-ink-strong: #522818;
+  --accent-soft: rgba(164, 94, 65, 0.12);
+  --moss: #4c6b55;
+  --line: rgba(75, 60, 48, 0.12);
+  --line-strong: rgba(75, 60, 48, 0.18);
+  --ring: rgba(108, 57, 38, 0.32);
+  --tone-do: #527b4d;
+  --tone-schedule: #a08636;
+  --tone-delegate: #5c7f8f;
+  --tone-drop: #b55639;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(181, 104, 74, 0.18), transparent 28%),
+    radial-gradient(circle at 100% 0%, rgba(76, 107, 85, 0.16), transparent 24%),
+    linear-gradient(180deg, #f8f1e5 0%, #f4ede1 48%, #efe6d8 100%);
+  color: var(--ink);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(117, 100, 83, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 100, 83, 0.04) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(circle at center, black, transparent 80%);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+a,
+input,
+textarea {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.site-frame {
+  position: relative;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgba(75, 60, 48, 0.08);
+  background: rgba(244, 237, 225, 0.7);
+  backdrop-filter: blur(18px);
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-ink);
+}
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--muted-ink);
+}
+
+.nav-pill:hover {
+  color: var(--ink);
+}
+
+.nav-pill-active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(38, 30, 26, 0.08);
+}
+
+.dashboard-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1.5fr) 320px;
+  }
+}
+
+.stat-chip {
+  display: grid;
+  gap: 0.35rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--line);
+  padding: 1rem;
+  background: rgba(255, 252, 247, 0.72);
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-ink);
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.matrix-card {
+  min-height: 420px;
+}
+
+.summary-card {
+  overflow: hidden;
+}
+
+.summary-task {
+  border: 1px solid var(--line);
+  border-radius: 1.2rem;
+  background: rgba(255, 252, 247, 0.72);
+  padding: 0.9rem 1rem;
+}
+
+.summary-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--accent-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.5rem 0.65rem;
+}
+
+.summary-task-link {
+  display: inline-block;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.summary-task-link:hover {
+  color: var(--accent-ink);
+}
+
+.summary-task-meta {
+  margin: 0.25rem 0 0;
+  color: var(--muted-ink);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summary-note {
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 252, 247, 0.72);
+  padding: 0.95rem 1rem;
+}

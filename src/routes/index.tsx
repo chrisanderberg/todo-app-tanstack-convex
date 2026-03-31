@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { AlarmClockCheck, CircleHelp, Plus, Sparkles, Target } from 'lucide-react'
+import { AlarmClockCheck, CircleHelp, Plus, Sparkles, Target, type LucideIcon } from 'lucide-react'
 import { TaskMatrixChart } from '@/components/charts/task-matrix-chart'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,9 +15,43 @@ import {
   useRankingChoices,
   useTaskActions,
 } from '@/features/tasks/use-task-data'
-import { resolutionLabels } from '@/lib/task-model'
+import { resolutionLabels, type MatrixPoint } from '@/lib/task-model'
 
 export const Route = createFileRoute('/')({ component: MatrixRoute })
+
+export function SummaryTaskRow({
+  Icon,
+  index,
+  task,
+}: {
+  Icon: LucideIcon
+  index: number
+  task: MatrixPoint
+}) {
+  return (
+    <div className="summary-task">
+      <div className="flex items-start gap-3">
+        <span className="summary-rank">
+          <Icon className="h-3.5 w-3.5" />
+          {index + 1}
+        </span>
+        <div className="min-w-0 flex-1">
+          <Link
+            className="summary-task-link"
+            params={{ taskId: task.id }}
+            to="/tasks/$taskId"
+          >
+            {task.title}
+          </Link>
+          <p className="summary-task-meta">{formatShortDueDate(task.dueDate)}</p>
+        </div>
+        <Badge>
+          {task.resolutionType ? resolutionLabels[task.resolutionType] : 'Unresolved'}
+        </Badge>
+      </div>
+    </div>
+  )
+}
 
 function MatrixRoute() {
   const navigate = useNavigate()
@@ -116,7 +150,9 @@ function MatrixRoute() {
               <Card className="summary-card">
                 <CardHeader className="pb-4">
                   <p className="eyebrow">Live summary</p>
-                  <CardTitle>{summary.activeCount} active tasks</CardTitle>
+                  <CardTitle>
+                    {summary.activeCount} active {summary.activeCount === 1 ? 'task' : 'tasks'}
+                  </CardTitle>
                   <CardDescription>
                     The matrix works best when the sidebar helps you spot what needs a decision next.
                   </CardDescription>
@@ -151,27 +187,7 @@ function MatrixRoute() {
                 </CardHeader>
                 <CardContent className="grid gap-3">
                   {summary.highestImportance.map((task, index) => (
-                    <div key={task.id} className="summary-task">
-                      <div className="flex items-start gap-3">
-                        <span className="summary-rank">
-                          <Target className="h-3.5 w-3.5" />
-                          {index + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            className="summary-task-link"
-                            params={{ taskId: task.id }}
-                            to="/tasks/$taskId"
-                          >
-                            {task.title}
-                          </Link>
-                          <p className="summary-task-meta">{formatShortDueDate(task.dueDate)}</p>
-                        </div>
-                        <Badge>
-                          {task.resolutionType ? resolutionLabels[task.resolutionType] : 'Unresolved'}
-                        </Badge>
-                      </div>
-                    </div>
+                    <SummaryTaskRow Icon={Target} index={index} key={task.id} task={task} />
                   ))}
                 </CardContent>
               </Card>
@@ -186,27 +202,12 @@ function MatrixRoute() {
                 </CardHeader>
                 <CardContent className="grid gap-3">
                   {summary.highestUrgency.map((task, index) => (
-                    <div key={task.id} className="summary-task">
-                      <div className="flex items-start gap-3">
-                        <span className="summary-rank">
-                          <AlarmClockCheck className="h-3.5 w-3.5" />
-                          {index + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            className="summary-task-link"
-                            params={{ taskId: task.id }}
-                            to="/tasks/$taskId"
-                          >
-                            {task.title}
-                          </Link>
-                          <p className="summary-task-meta">{formatShortDueDate(task.dueDate)}</p>
-                        </div>
-                        <Badge>
-                          {task.resolutionType ? resolutionLabels[task.resolutionType] : 'Unresolved'}
-                        </Badge>
-                      </div>
-                    </div>
+                    <SummaryTaskRow
+                      Icon={AlarmClockCheck}
+                      index={index}
+                      key={task.id}
+                      task={task}
+                    />
                   ))}
                 </CardContent>
               </Card>

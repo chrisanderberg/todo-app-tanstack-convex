@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ResponsiveScatterPlot } from '@nivo/scatterplot'
+import type { Id } from '../../../convex/_generated/dataModel'
 import type { MatrixPoint } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 import {
@@ -10,9 +11,12 @@ import { formatShortDueDate } from '@/features/tasks/use-task-data'
 import { resolutionLabels } from '@/lib/task-model'
 
 type MatrixChartProps = {
-  currentTaskId?: string
-  onPointClick?: (taskId: string) => void
-  onPointReorder?: (taskId: string, next: { importancePosition: number; urgencyPosition: number }) => void | Promise<void>
+  currentTaskId?: Id<'tasks'>
+  onPointClick?: (taskId: Id<'tasks'>) => void
+  onPointReorder?: (
+    taskId: Id<'tasks'>,
+    next: { importancePosition: number; urgencyPosition: number },
+  ) => void | Promise<void>
   points: MatrixPoint[]
   subtitle?: string
 }
@@ -33,6 +37,14 @@ type DragState = {
   pointerId: number
   startedAt: { x: number; y: number }
   currentAt: { x: number; y: number }
+}
+
+type InteractiveNode = {
+  x: number
+  y: number
+  size: number
+  data: PointDatum
+  serieId: string | number
 }
 
 const CHART_MARGIN = { top: 24, right: 34, bottom: 60, left: 64 }
@@ -177,6 +189,7 @@ export function TaskMatrixChart({
   const [mounted, setMounted] = useState(false)
   const [hoveredPoint, setHoveredPoint] = useState<HoverState | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
+  const [reorderError, setReorderError] = useState<string | null>(null)
   const plotFrameRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -267,12 +280,24 @@ export function TaskMatrixChart({
         nextPlotPosition,
       )
 
-      setDragState(null)
-      setHoveredPoint(null)
-      await commitReorder(activeDrag.point.id, {
-        importancePosition,
-        urgencyPosition,
-      })
+      try {
+        await commitReorder(activeDrag.point.id, {
+          importancePosition,
+          urgencyPosition,
+        })
+        setDragState(null)
+        setHoveredPoint(null)
+        setReorderError(null)
+      } catch (error) {
+        setDragState(null)
+        setHoveredPoint(null)
+        setReorderError(
+          error instanceof Error
+            ? error.message
+            : 'Something went wrong while reordering the task.',
+        )
+        console.error('Failed to reorder task.', error)
+      }
     }
 
     function handlePointerMove(event: PointerEvent) {
@@ -302,18 +327,10 @@ export function TaskMatrixChart({
     }
   }, [dragState, onPointClick, onPointReorder, points])
 
-  const InteractiveNodesLayer = (layerProps: any) => {
-    const nodes = layerProps.nodes as Array<{
-      x: number
-      y: number
-      size: number
-      data: PointDatum
-      serieId: string
-    }>
-
-    return (
+  const InteractiveNodesLayer = useCallback(
+    (layerProps: { nodes: InteractiveNode[] }) => (
       <g>
-        {nodes.map((node) => {
+        {layerProps.nodes.map((node) => {
           const isCurrent = node.data.id === currentTaskId
           const isDragging = dragState?.point.id === node.data.id
 
@@ -349,6 +366,7 @@ export function TaskMatrixChart({
                 }
 
                 event.preventDefault()
+                setReorderError(null)
                 setDragState({
                   point: node.data,
                   pointerId: event.pointerId,
@@ -360,8 +378,9 @@ export function TaskMatrixChart({
           )
         })}
       </g>
-    )
-  }
+    ),
+    [currentTaskId, dragState, isInteractive, onPointReorder],
+  )
 
   const dragGhost = useMemo(() => {
     if (!dragState || !plotFrameRef.current) {
@@ -397,6 +416,9 @@ export function TaskMatrixChart({
     <div className="matrix-card h-[420px] overflow-visible rounded-[1.8rem] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(254,250,245,0.96),rgba(244,238,228,0.9))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
       <div className="flex h-full min-h-0 flex-col">
         {subtitle ? <p className="px-3 pb-2 text-xs uppercase tracking-[0.2em] text-[var(--muted-ink)]">{subtitle}</p> : null}
+        {reorderError ? (
+          <p className="px-3 pb-2 text-sm text-[var(--tone-drop)]">{reorderError}</p>
+        ) : null}
         <div ref={plotFrameRef} className="relative min-h-0 flex-1">
           <ResponsiveScatterPlot<PointDatum>
             data={data}
@@ -451,7 +473,6 @@ export function TaskMatrixChart({
             <div
               className={cn(
                 'pointer-events-none absolute z-20 max-w-[240px] rounded-3xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3 shadow-[0_20px_60px_rgba(25,20,18,0.16)]',
-                hoveredPoint.y < 84 ? 'translate-y-3' : '-translate-y-[calc(100%+14px)]',
               )}
               style={{
                 left: hoveredPoint.x,

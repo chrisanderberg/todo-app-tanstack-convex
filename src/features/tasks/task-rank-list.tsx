@@ -1,3 +1,4 @@
+import type { Id } from '../../../convex/_generated/dataModel'
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -10,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { moveItemToPosition } from '@/lib/ranking/task-ranking'
 
 type DragState = {
-  taskId: string
+  taskId: Id<'tasks'>
   overIndex: number | null
 }
 
@@ -20,7 +21,7 @@ export function TaskRankList({
   tasks,
 }: {
   dimension: RankDimension
-  onMove: (taskId: string, index: number) => Promise<void> | void
+  onMove: (taskId: Id<'tasks'>, index: number) => Promise<void> | void
   tasks: TaskViewModel[]
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -51,6 +52,7 @@ export function TaskRankList({
       dragState.overIndex,
     )
   }, [dragState, orderedTasks])
+  const endDropIndex = orderedTasks.length
 
   async function commitMove(index: number) {
     if (!dragState?.taskId) {
@@ -69,8 +71,11 @@ export function TaskRankList({
       return
     }
 
-    await onMove(dragState.taskId, index)
-    setDragState(null)
+    try {
+      await onMove(dragState.taskId, index)
+    } finally {
+      setDragState(null)
+    }
   }
 
   return (
@@ -85,6 +90,7 @@ export function TaskRankList({
           const rank = dimension === 'importance' ? task.importanceRank : task.urgencyRank
           const isDragging = dragState?.taskId === task.id
           const isTarget = dragState?.overIndex === index && dragState.taskId !== task.id
+          const previewIndex = previewTasks.findIndex((previewTask) => previewTask.id === task.id)
 
           return (
             <div
@@ -141,19 +147,19 @@ export function TaskRankList({
                 <div className="flex shrink-0 flex-col gap-2">
                   <Button
                     aria-label={`Move ${task.title} up`}
-                    disabled={index === 0}
+                    disabled={previewIndex === 0}
                     size="icon"
                     variant="ghost"
-                    onClick={() => void onMove(task.id, index - 1)}
+                    onClick={() => void onMove(task.id, previewIndex - 1)}
                   >
                     <ChevronUp className="h-4 w-4" />
                   </Button>
                   <Button
                     aria-label={`Move ${task.title} down`}
-                    disabled={index === orderedTasks.length - 1}
+                    disabled={previewIndex === previewTasks.length - 1}
                     size="icon"
                     variant="ghost"
-                    onClick={() => void onMove(task.id, index + 1)}
+                    onClick={() => void onMove(task.id, previewIndex + 1)}
                   >
                     <ChevronDown className="h-4 w-4" />
                   </Button>
@@ -166,7 +172,7 @@ export function TaskRankList({
         <div
           className={cn(
             'rounded-[1.2rem] border border-dashed border-[var(--line-strong)] px-4 py-3 text-center text-sm text-[var(--muted-ink)] transition',
-            dragState && dragState.overIndex === orderedTasks.length
+            dragState && dragState.overIndex === endDropIndex
               ? 'border-[var(--accent-ink)] bg-[var(--paper)] text-[var(--ink)]'
               : '',
           )}
@@ -176,12 +182,14 @@ export function TaskRankList({
               return
             }
             setDragState((current) =>
-              current ? { ...current, overIndex: orderedTasks.length } : current,
+              // Use list length as an explicit "place after the last item" sentinel.
+              current ? { ...current, overIndex: endDropIndex } : current,
             )
           }}
           onDrop={(event) => {
             event.preventDefault()
-            void commitMove(orderedTasks.length - 1)
+            // commitMove accepts the same end-of-list sentinel and normalizes it on insert.
+            void commitMove(endDropIndex)
           }}
         >
           Drag here to place at the end

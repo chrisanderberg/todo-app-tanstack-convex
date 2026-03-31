@@ -51,8 +51,14 @@ export function useRankingChoices(currentTaskId?: string) {
     }
 
     return {
-      importance: createPositionOptions(options.importance, currentTaskId),
-      urgency: createPositionOptions(options.urgency, currentTaskId),
+      importance: createPositionOptions(
+        options.importance,
+        currentTaskId as Id<'tasks'> | undefined,
+      ),
+      urgency: createPositionOptions(
+        options.urgency,
+        currentTaskId as Id<'tasks'> | undefined,
+      ),
     }
   }, [currentTaskId, options])
 }
@@ -121,16 +127,26 @@ export function formatShortDueDate(value: string | null) {
   }).format(new Date(`${value}T00:00:00`))
 }
 
+function getLocalDateValueParts(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  return { year, month, day }
+}
+
+function differenceInCalendarDays(value: string, today = new Date()) {
+  const { year, month, day } = getLocalDateValueParts(value)
+  const dueUtc = Date.UTC(year, month - 1, day)
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const msPerDay = 24 * 60 * 60 * 1000
+
+  return Math.floor((dueUtc - todayUtc) / msPerDay)
+}
+
 export function formatDueDateContext(value: string | null) {
   if (!value) {
     return 'No due date'
   }
 
-  const today = new Date()
-  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const due = new Date(`${value}T00:00:00`)
-  const msPerDay = 24 * 60 * 60 * 1000
-  const diffDays = Math.round((due.getTime() - current.getTime()) / msPerDay)
+  const diffDays = differenceInCalendarDays(value)
   const formatted = formatDueDate(value)
 
   if (diffDays === 0) {
@@ -176,11 +192,7 @@ export function getDashboardSummary(points: MatrixPoint[]): DashboardSummary {
       return false
     }
 
-    const today = new Date()
-    const current = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const due = new Date(`${point.dueDate}T00:00:00`)
-    const msPerDay = 24 * 60 * 60 * 1000
-    const diffDays = Math.round((due.getTime() - current.getTime()) / msPerDay)
+    const diffDays = differenceInCalendarDays(point.dueDate)
 
     return diffDays <= 3
   }).length

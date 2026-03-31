@@ -57,9 +57,9 @@ function DialogHeader({
 function DialogTitle({
   className,
   ...props
-}: React.HTMLAttributes<HTMLHeadingElement>) {
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
-    <h3
+    <DialogPrimitive.Title
       className={cn(
         'font-display text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)]',
         className,
@@ -72,8 +72,13 @@ function DialogTitle({
 function DialogDescription({
   className,
   ...props
-}: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-sm leading-6 text-[var(--muted-ink)]', className)} {...props} />
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      className={cn('text-sm leading-6 text-[var(--muted-ink)]', className)}
+      {...props}
+    />
+  )
 }
 
 export {

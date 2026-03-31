@@ -31,6 +31,8 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const saveTimerRef = useRef<number | null>(null)
+  const restoreImportancePosition = Math.max(0, importance.length - 1)
+  const restoreUrgencyPosition = Math.max(0, urgency.length - 1)
 
   useEffect(() => {
     if (!task) {
@@ -96,7 +98,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => void setTaskStatus({ taskId: task.id as never, status: 'completed' })}
+              onClick={() => void setTaskStatus({ taskId: task.id, status: 'completed' })}
             >
               <CheckCircle2 className="h-4 w-4" />
               Complete
@@ -104,7 +106,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => void setTaskStatus({ taskId: task.id as never, status: 'archived' })}
+              onClick={() => void setTaskStatus({ taskId: task.id, status: 'archived' })}
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -116,9 +118,9 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             variant="secondary"
             onClick={() =>
               void restoreTask({
-                taskId: task.id as never,
-                importancePosition: task.importanceRank,
-                urgencyPosition: task.urgencyRank,
+                taskId: task.id,
+                importancePosition: restoreImportancePosition,
+                urgencyPosition: restoreUrgencyPosition,
               })
             }
           >
@@ -181,7 +183,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                     beginSaving()
                     try {
                       await updateTask({
-                        taskId: task.id as never,
+                        taskId: task.id,
                         title: nextTitle,
                       })
                       finishSaving()
@@ -206,7 +208,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                     beginSaving()
                     try {
                       await updateTask({
-                        taskId: task.id as never,
+                        taskId: task.id,
                         description: draftDescription.trim(),
                       })
                       finishSaving()
@@ -240,7 +242,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                           beginSaving()
                           try {
                             await updateTask({
-                              taskId: task.id as never,
+                              taskId: task.id,
                               importancePosition: Number(next),
                             })
                             finishSaving()
@@ -282,7 +284,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                           beginSaving()
                           try {
                             await updateTask({
-                              taskId: task.id as never,
+                              taskId: task.id,
                               urgencyPosition: Number(next),
                             })
                             finishSaving()
@@ -321,7 +323,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                         beginSaving()
                         try {
                           await updateTask({
-                            taskId: task.id as never,
+                            taskId: task.id,
                             dueDate: event.target.value || null,
                           })
                           finishSaving()
@@ -347,7 +349,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                         beginSaving()
                         try {
                           await updateTask({
-                            taskId: task.id as never,
+                            taskId: task.id,
                             resolutionType: next === 'none' ? null : (next as ResolutionType),
                           })
                           finishSaving()
@@ -384,7 +386,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <TaskMiniMatrix currentTaskId={taskId} points={points} />
+            <TaskMiniMatrix currentTaskId={task.id} points={points} />
           </CardContent>
         </Card>
       </div>

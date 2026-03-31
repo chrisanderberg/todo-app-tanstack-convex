@@ -60,7 +60,7 @@ function ListRoute() {
           tasks={importanceTasks}
           onMove={async (taskId, index) => {
             await updateTask({
-              taskId: taskId as never,
+              taskId,
               importancePosition: index,
             })
           }}
@@ -70,7 +70,7 @@ function ListRoute() {
           tasks={urgencyTasks}
           onMove={async (taskId, index) => {
             await updateTask({
-              taskId: taskId as never,
+              taskId,
               urgencyPosition: index,
             })
           }}
@@ -98,14 +98,20 @@ function ListRoute() {
         mode="create"
         onOpenChange={setIsCreateOpen}
         onSubmit={async (values) => {
-          await createTask({
-            title: values.title,
-            description: values.description,
-            dueDate: values.dueDate || null,
-            resolutionType: values.resolutionType,
-            importancePosition: values.importancePosition,
-            urgencyPosition: values.urgencyPosition,
-          })
+          try {
+            await createTask({
+              title: values.title,
+              description: values.description,
+              dueDate: values.dueDate || null,
+              resolutionType: values.resolutionType,
+              importancePosition: values.importancePosition,
+              urgencyPosition: values.urgencyPosition,
+            })
+          } catch (error) {
+            throw error instanceof Error
+              ? error
+              : new Error('Something went wrong while creating the task.')
+          }
         }}
         title="Create ranked task"
         urgencyOptions={rankingChoices.urgency}

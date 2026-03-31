@@ -1,3 +1,5 @@
+import type { Id } from '../../convex/_generated/dataModel'
+
 export const TASK_STATUSES = ['active', 'completed', 'archived'] as const
 export type TaskStatus = (typeof TASK_STATUSES)[number]
 
@@ -26,7 +28,7 @@ export type RankedTaskUpdate = {
 }
 
 export type TaskViewModel = {
-  id: string
+  id: Id<'tasks'>
   title: string
   description: string
   status: TaskStatus
@@ -41,7 +43,7 @@ export type TaskViewModel = {
 }
 
 export type MatrixPoint = {
-  id: string
+  id: Id<'tasks'>
   title: string
   description: string
   status: TaskStatus

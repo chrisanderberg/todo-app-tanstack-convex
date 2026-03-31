@@ -11,7 +11,7 @@ const convexClient = convexUrl
 
 export function AppProviders({ children }: PropsWithChildren) {
   if (!convexClient) {
-    return <>{children}</>
+    throw new Error('Convex client not configured — cannot use Convex hooks.')
   }
 
   return <ConvexProvider client={convexClient}>{children}</ConvexProvider>

@@ -192,9 +192,9 @@ export function getDashboardSummary(points: MatrixPoint[]): DashboardSummary {
       return false
     }
 
-    const diffDays = differenceInCalendarDays(point.dueDate)
+    const diffDays = differenceInCalendarDays(point.dueDate, new Date())
 
-    return diffDays <= 3
+    return diffDays >= 0 && diffDays <= 3
   }).length
 
   return {

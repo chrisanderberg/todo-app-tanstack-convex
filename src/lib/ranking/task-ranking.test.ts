@@ -112,4 +112,19 @@ describe('createPositionOptions', () => {
       { value: 2, label: '3. After Beta' },
     ])
   })
+
+  it('excludes the current task and renumbers the remaining positions', () => {
+    expect(
+      createPositionOptions(
+        [
+          { id: 'a', title: 'Alpha' },
+          { id: 'b', title: 'Beta' },
+        ],
+        'a',
+      ),
+    ).toEqual([
+      { value: 0, label: '1. Before Beta' },
+      { value: 1, label: '2. After Beta' },
+    ])
+  })
 })

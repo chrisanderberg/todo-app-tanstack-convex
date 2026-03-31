@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AlarmClockCheck, CircleHelp, Plus, Sparkles, Target } from 'lucide-react'
 import { TaskMatrixChart } from '@/components/charts/task-matrix-chart'
@@ -26,6 +26,14 @@ function MatrixRoute() {
   const { createTask, seedData, updateTask } = useTaskActions()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const summary = getDashboardSummary(points)
+  const createInitialValues = useMemo(
+    () =>
+      getDefaultTaskFormValues(
+        rankingChoices.importance,
+        rankingChoices.urgency,
+      ),
+    [rankingChoices.importance, rankingChoices.urgency],
+  )
 
   return (
     <main className="page-shell py-10">
@@ -205,10 +213,7 @@ function MatrixRoute() {
       <TaskFormDialog
         description="Add a task and choose its starting positions in the importance and urgency orderings."
         importanceOptions={rankingChoices.importance}
-        initialValues={getDefaultTaskFormValues(
-          rankingChoices.importance,
-          rankingChoices.urgency,
-        )}
+        initialValues={createInitialValues}
         isOpen={isCreateOpen}
         mode="create"
         onOpenChange={setIsCreateOpen}

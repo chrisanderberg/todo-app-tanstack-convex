@@ -38,6 +38,7 @@ const SelectContent = React.forwardRef<
         className,
       )}
       position="popper"
+      sideOffset={6}
       {...props}
     >
       <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>

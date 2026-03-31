@@ -31,6 +31,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const saveTimerRef = useRef<number | null>(null)
+  const previousTaskRef = useRef<typeof task>(null)
   const restoreImportancePosition = Math.max(0, importance.length - 1)
   const restoreUrgencyPosition = Math.max(0, urgency.length - 1)
 
@@ -39,9 +40,17 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
       return
     }
 
-    setDraftTitle(task.title)
-    setDraftDescription(task.description)
-  }, [task])
+    const previousTask = previousTaskRef.current
+    const titleWasPristine = draftTitle === (previousTask?.title ?? '')
+    const descriptionWasPristine = draftDescription === (previousTask?.description ?? '')
+
+    if (previousTask?.id !== task.id || (titleWasPristine && descriptionWasPristine)) {
+      setDraftTitle(task.title)
+      setDraftDescription(task.description)
+    }
+
+    previousTaskRef.current = task
+  }, [draftDescription, draftTitle, task])
 
   useEffect(() => {
     return () => {
@@ -72,6 +81,17 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     setErrorMessage(error instanceof Error ? error.message : 'Unable to save changes.')
   }
 
+  async function runSavingMutation(mutation: () => Promise<unknown>) {
+    beginSaving()
+
+    try {
+      await mutation()
+      finishSaving()
+    } catch (error) {
+      failSaving(error)
+    }
+  }
+
   if (!task) {
     return (
       <main className="page-shell py-16">
@@ -98,7 +118,11 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => void setTaskStatus({ taskId: task.id, status: 'completed' })}
+              onClick={() =>
+                void runSavingMutation(() =>
+                  setTaskStatus({ taskId: task.id, status: 'completed' }),
+                )
+              }
             >
               <CheckCircle2 className="h-4 w-4" />
               Complete
@@ -106,7 +130,11 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => void setTaskStatus({ taskId: task.id, status: 'archived' })}
+              onClick={() =>
+                void runSavingMutation(() =>
+                  setTaskStatus({ taskId: task.id, status: 'archived' }),
+                )
+              }
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -117,11 +145,13 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             size="sm"
             variant="secondary"
             onClick={() =>
-              void restoreTask({
-                taskId: task.id,
-                importancePosition: restoreImportancePosition,
-                urgencyPosition: restoreUrgencyPosition,
-              })
+              void runSavingMutation(() =>
+                restoreTask({
+                  taskId: task.id,
+                  importancePosition: restoreImportancePosition,
+                  urgencyPosition: restoreUrgencyPosition,
+                }),
+              )
             }
           >
             <RotateCcw className="h-4 w-4" />

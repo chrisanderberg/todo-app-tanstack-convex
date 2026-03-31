@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -41,8 +41,16 @@ export function TaskFormDialog({
   const [values, setValues] = useState(initialValues)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const previousIsOpenRef = useRef(isOpen)
 
   useEffect(() => {
+    const wasOpen = previousIsOpenRef.current
+    previousIsOpenRef.current = isOpen
+
+    if (!isOpen || wasOpen) {
+      return
+    }
+
     setValues(initialValues)
     setError(null)
   }, [initialValues, isOpen])

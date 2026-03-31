@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,14 @@ function ListRoute() {
   const importanceTasks = getOrderedActiveTasks(tasks, 'importance')
   const urgencyTasks = getOrderedActiveTasks(tasks, 'urgency')
   const filteredCount = filterTasks(tasks, filter).length
+  const createInitialValues = useMemo(
+    () =>
+      getDefaultTaskFormValues(
+        rankingChoices.importance,
+        rankingChoices.urgency,
+      ),
+    [rankingChoices.importance, rankingChoices.urgency],
+  )
 
   return (
     <main className="page-shell py-10">
@@ -90,10 +98,7 @@ function ListRoute() {
       <TaskFormDialog
         description="Capture a task and place it directly into both ranked orderings."
         importanceOptions={rankingChoices.importance}
-        initialValues={getDefaultTaskFormValues(
-          rankingChoices.importance,
-          rankingChoices.urgency,
-        )}
+        initialValues={createInitialValues}
         isOpen={isCreateOpen}
         mode="create"
         onOpenChange={setIsCreateOpen}

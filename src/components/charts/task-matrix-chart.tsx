@@ -52,8 +52,8 @@ const DRAG_THRESHOLD = 8
 
 const regionLabels = [
   { x: 0.17, y: 0.18, label: 'Delegate', tone: 'var(--tone-delegate)' },
-  { x: 0.74, y: 0.18, label: 'Drop', tone: 'var(--tone-drop)' },
-  { x: 0.16, y: 0.84, label: 'Do', tone: 'var(--tone-do)' },
+  { x: 0.74, y: 0.18, label: 'Do', tone: 'var(--tone-do)' },
+  { x: 0.16, y: 0.84, label: 'Drop', tone: 'var(--tone-drop)' },
   { x: 0.74, y: 0.84, label: 'Schedule', tone: 'var(--tone-schedule)' },
 ]
 

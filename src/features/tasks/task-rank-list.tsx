@@ -25,6 +25,7 @@ export function TaskRankList({
   tasks: TaskViewModel[]
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null)
+  const [isMoving, setIsMoving] = useState(false)
 
   const title = dimension === 'importance' ? 'Importance order' : 'Urgency order'
   const description =
@@ -55,25 +56,35 @@ export function TaskRankList({
   const endDropIndex = orderedTasks.length
 
   async function commitMove(index: number) {
-    if (!dragState?.taskId) {
+    if (!dragState?.taskId || isMoving) {
       return
     }
 
-    const movingTask = orderedTasks.find((task) => task.id === dragState.taskId)
+    await moveTask(dragState.taskId, index)
+    setDragState(null)
+  }
+
+  async function moveTask(taskId: Id<'tasks'>, index: number) {
+    if (isMoving) {
+      return
+    }
+
+    const movingTask = orderedTasks.find((task) => task.id === taskId)
     if (!movingTask) {
-      setDragState(null)
       return
     }
 
-    const currentIndex = orderedTasks.findIndex((task) => task.id === dragState.taskId)
+    const currentIndex = orderedTasks.findIndex((task) => task.id === taskId)
     if (currentIndex === index) {
-      setDragState(null)
       return
     }
+
+    setIsMoving(true)
 
     try {
-      await onMove(dragState.taskId, index)
+      await onMove(taskId, index)
     } finally {
+      setIsMoving(false)
       setDragState(null)
     }
   }
@@ -87,7 +98,7 @@ export function TaskRankList({
       </CardHeader>
       <CardContent className="grid gap-3">
         {previewTasks.map((task, index) => {
-          const rank = dimension === 'importance' ? task.importanceRank : task.urgencyRank
+          const rank = index
           const isDragging = dragState?.taskId === task.id
           const isTarget = dragState?.overIndex === index && dragState.taskId !== task.id
           const previewIndex = previewTasks.findIndex((previewTask) => previewTask.id === task.id)
@@ -100,11 +111,11 @@ export function TaskRankList({
                 isDragging && 'opacity-45',
                 isTarget && 'border-[var(--accent-ink)] bg-[var(--paper)]',
               )}
-              draggable
+              draggable={!isMoving}
               onDragEnd={() => setDragState(null)}
               onDragOver={(event) => {
                 event.preventDefault()
-                if (!dragState) {
+                if (!dragState || isMoving) {
                   return
                 }
                 setDragState((current) =>
@@ -112,6 +123,9 @@ export function TaskRankList({
                 )
               }}
               onDragStart={() => {
+                if (isMoving) {
+                  return
+                }
                 setDragState({ taskId: task.id, overIndex: index })
               }}
               onDrop={(event) => {
@@ -147,19 +161,19 @@ export function TaskRankList({
                 <div className="flex shrink-0 flex-col gap-2">
                   <Button
                     aria-label={`Move ${task.title} up`}
-                    disabled={previewIndex === 0}
+                    disabled={isMoving || previewIndex === 0}
                     size="icon"
                     variant="ghost"
-                    onClick={() => void onMove(task.id, previewIndex - 1)}
+                    onClick={() => void moveTask(task.id, previewIndex - 1)}
                   >
                     <ChevronUp className="h-4 w-4" />
                   </Button>
                   <Button
                     aria-label={`Move ${task.title} down`}
-                    disabled={previewIndex === previewTasks.length - 1}
+                    disabled={isMoving || previewIndex === previewTasks.length - 1}
                     size="icon"
                     variant="ghost"
-                    onClick={() => void onMove(task.id, previewIndex + 1)}
+                    onClick={() => void moveTask(task.id, previewIndex + 1)}
                   >
                     <ChevronDown className="h-4 w-4" />
                   </Button>
@@ -178,7 +192,7 @@ export function TaskRankList({
           )}
           onDragOver={(event) => {
             event.preventDefault()
-            if (!dragState) {
+            if (!dragState || isMoving) {
               return
             }
             setDragState((current) =>

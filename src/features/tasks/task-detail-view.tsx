@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { Archive, ArrowLeft, CheckCircle2, RotateCcw } from 'lucide-react'
-import { TaskMiniMatrix } from '@/components/charts/task-mini-matrix'
+import { Archive, CheckCircle2, RotateCcw } from 'lucide-react'
+import { EisenhowerMatrix } from '@/components/charts/eisenhower-matrix'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { ResolutionBadge, StatusBadge } from '@/features/tasks/task-badges'
 import {
   canReRank,
-  formatDueDate,
   formatDueDateContext,
   useMatrixTasks,
   useRankingChoices,
@@ -21,6 +18,8 @@ import {
 } from '@/features/tasks/use-task-data'
 import { RESOLUTION_VALUES, resolutionLabels, type ResolutionType } from '@/lib/task-model'
 
+type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
 export function TaskDetailView({ taskId }: { taskId: string }) {
   const task = useTaskDetail(taskId)
   const points = useMatrixTasks()
@@ -28,7 +27,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
   const { restoreTask, setTaskStatus, updateTask } = useTaskActions()
   const [draftTitle, setDraftTitle] = useState('')
   const [draftDescription, setDraftDescription] = useState('')
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveState, setSaveState] = useState<SaveState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const saveTimerRef = useRef<number | null>(null)
   const previousTaskRef = useRef<typeof task>(null)
@@ -36,44 +35,32 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
   const restoreUrgencyPosition = Math.max(0, urgency.length - 1)
 
   useEffect(() => {
-    if (!task) {
-      return
-    }
-
-    const previousTask = previousTaskRef.current
-    const titleWasPristine = draftTitle === (previousTask?.title ?? '')
-    const descriptionWasPristine = draftDescription === (previousTask?.description ?? '')
-
-    if (previousTask?.id !== task.id || (titleWasPristine && descriptionWasPristine)) {
+    if (!task) return
+    const prev = previousTaskRef.current
+    const titlePristine = draftTitle === (prev?.title ?? '')
+    const descPristine = draftDescription === (prev?.description ?? '')
+    if (prev?.id !== task.id || (titlePristine && descPristine)) {
       setDraftTitle(task.title)
       setDraftDescription(task.description)
     }
-
     previousTaskRef.current = task
   }, [draftDescription, draftTitle, task])
 
   useEffect(() => {
     return () => {
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current)
-      }
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
     }
   }, [])
 
   function beginSaving() {
-    if (saveTimerRef.current) {
-      window.clearTimeout(saveTimerRef.current)
-    }
-
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
     setErrorMessage(null)
     setSaveState('saving')
   }
 
   function finishSaving() {
     setSaveState('saved')
-    saveTimerRef.current = window.setTimeout(() => {
-      setSaveState('idle')
-    }, 1800)
+    saveTimerRef.current = window.setTimeout(() => setSaveState('idle'), 1800)
   }
 
   function failSaving(error: unknown) {
@@ -83,7 +70,6 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 
   async function runSavingMutation(mutation: () => Promise<unknown>) {
     beginSaving()
-
     try {
       await mutation()
       finishSaving()
@@ -94,332 +80,263 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 
   if (!task) {
     return (
-      <main className="page-shell py-16">
-        <Card>
-          <CardHeader>
-            <CardTitle>Loading task...</CardTitle>
-          </CardHeader>
-        </Card>
-      </main>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-[var(--text-tertiary)]">Loading task…</p>
+      </div>
     )
   }
 
-  return (
-    <main className="page-shell py-10">
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Button asChild size="sm" variant="ghost">
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4" />
-            Back to matrix
-          </Link>
-        </Button>
-        {task.status === 'active' ? (
-          <>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() =>
-                void runSavingMutation(() =>
-                  setTaskStatus({ taskId: task.id, status: 'completed' }),
-                )
-              }
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              Complete
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() =>
-                void runSavingMutation(() =>
-                  setTaskStatus({ taskId: task.id, status: 'archived' }),
-                )
-              }
-            >
-              <Archive className="h-4 w-4" />
-              Archive
-            </Button>
-          </>
-        ) : (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() =>
-              void runSavingMutation(() =>
-                restoreTask({
-                  taskId: task.id,
-                  importancePosition: restoreImportancePosition,
-                  urgencyPosition: restoreUrgencyPosition,
-                }),
-              )
-            }
-          >
-            <RotateCcw className="h-4 w-4" />
-            Restore to active
-          </Button>
-        )}
-      </div>
+  const saveIndicator =
+    saveState === 'saving' ? (
+      <span className="text-xs text-[var(--text-tertiary)]">Saving…</span>
+    ) : saveState === 'saved' ? (
+      <span className="text-xs text-[var(--tone-do)]">Saved</span>
+    ) : saveState === 'error' ? (
+      <span className="text-xs text-[var(--tone-drop)]">Save failed</span>
+    ) : null
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_420px]">
-        <Card>
-          <CardHeader>
-            <p className="eyebrow">Task detail</p>
-            <CardTitle>{task.title}</CardTitle>
-            <CardDescription>
-              {task.description || 'No description'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-5">
-            <div className="flex flex-wrap gap-3">
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--border)]">
+        <div className="flex items-start justify-between gap-3 pr-6">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
               <StatusBadge status={task.status} />
               <ResolutionBadge resolutionType={task.resolutionType} />
-              {saveState === 'saving' ? (
-                <span className="inline-flex items-center rounded-full bg-[var(--panel-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">
-                  Updating
-                </span>
-              ) : null}
-              {saveState === 'saved' ? (
-                <span className="inline-flex items-center rounded-full bg-[rgba(87,125,111,0.16)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--moss)]">
-                  Saved
-                </span>
-              ) : null}
-              {saveState === 'error' ? (
-                <span className="inline-flex items-center rounded-full bg-[rgba(181,86,57,0.14)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--tone-drop)]">
-                  Save failed
-                </span>
-              ) : null}
+              {saveIndicator}
             </div>
-            {errorMessage ? (
-              <p className="rounded-[1rem] border border-[rgba(181,86,57,0.16)] bg-[rgba(181,86,57,0.08)] px-4 py-3 text-sm text-[var(--tone-drop)]">
-                {errorMessage}
-              </p>
-            ) : null}
+            <h2 className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)] leading-tight">
+              {task.title}
+            </h2>
+          </div>
+        </div>
 
-            <Separator />
-
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="detail-title">Title</Label>
-                <Input
-                  id="detail-title"
-                  value={draftTitle}
-                  onBlur={async () => {
-                    const nextTitle = draftTitle.trim()
-                    if (!nextTitle || nextTitle === task.title) {
-                      setDraftTitle(task.title)
-                      return
-                    }
-
-                    beginSaving()
-                    try {
-                      await updateTask({
-                        taskId: task.id,
-                        title: nextTitle,
-                      })
-                      finishSaving()
-                    } catch (error) {
-                      failSaving(error)
-                    }
-                  }}
-                  onChange={(event) => setDraftTitle(event.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="detail-description">Description</Label>
-                <Textarea
-                  id="detail-description"
-                  value={draftDescription}
-                  onBlur={async () => {
-                    if (draftDescription === task.description) {
-                      return
-                    }
-
-                    beginSaving()
-                    try {
-                      await updateTask({
-                        taskId: task.id,
-                        description: draftDescription.trim(),
-                      })
-                      finishSaving()
-                    } catch (error) {
-                      failSaving(error)
-                    }
-                  }}
-                  onChange={(event) => setDraftDescription(event.target.value)}
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            <dl className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              <div>
-                <dt className="eyebrow">Importance rank</dt>
-                <dd className="mt-2 text-xl font-semibold text-[var(--ink)]">
-                  #{task.importanceRank + 1}
-                </dd>
-                <p className="mt-1 text-sm text-[var(--muted-ink)]">
-                  {(task.importancePercentile * 100).toFixed(0)}th percentile
-                </p>
-                {canReRank(task.status) ? (
-                  <div className="mt-3 grid gap-2">
-                    <Label>Move immediately</Label>
-                    <Select
-                      value={String(task.importanceRank)}
-                      onValueChange={(next) => {
-                        void (async () => {
-                          beginSaving()
-                          try {
-                            await updateTask({
-                              taskId: task.id,
-                              importancePosition: Number(next),
-                            })
-                            finishSaving()
-                          } catch (error) {
-                            failSaving(error)
-                          }
-                        })()
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {importance.map((option) => (
-                          <SelectItem key={option.value} value={String(option.value)}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-              </div>
-              <div>
-                <dt className="eyebrow">Urgency rank</dt>
-                <dd className="mt-2 text-xl font-semibold text-[var(--ink)]">
-                  #{task.urgencyRank + 1}
-                </dd>
-                <p className="mt-1 text-sm text-[var(--muted-ink)]">
-                  {(task.urgencyPercentile * 100).toFixed(0)}th percentile
-                </p>
-                {canReRank(task.status) ? (
-                  <div className="mt-3 grid gap-2">
-                    <Label>Move immediately</Label>
-                    <Select
-                      value={String(task.urgencyRank)}
-                      onValueChange={(next) => {
-                        void (async () => {
-                          beginSaving()
-                          try {
-                            await updateTask({
-                              taskId: task.id,
-                              urgencyPosition: Number(next),
-                            })
-                            finishSaving()
-                          } catch (error) {
-                            failSaving(error)
-                          }
-                        })()
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {urgency.map((option) => (
-                          <SelectItem key={option.value} value={String(option.value)}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-              </div>
-              <div>
-                <dt className="eyebrow">Due date</dt>
-                <dd className="mt-2 text-base font-semibold text-[var(--ink)]">{formatDueDate(task.dueDate)}</dd>
-                <p className="mt-1 text-sm text-[var(--muted-ink)]">{formatDueDateContext(task.dueDate)}</p>
-                <div className="mt-3 grid gap-2">
-                  <Label htmlFor="detail-due-date">Update immediately</Label>
-                  <Input
-                    id="detail-due-date"
-                    type="date"
-                    value={task.dueDate ?? ''}
-                    onChange={(event) => {
-                      void (async () => {
-                        beginSaving()
-                        try {
-                          await updateTask({
-                            taskId: task.id,
-                            dueDate: event.target.value || null,
-                          })
-                          finishSaving()
-                        } catch (error) {
-                          failSaving(error)
-                        }
-                      })()
-                    }}
-                  />
-                </div>
-              </div>
-              <div>
-                <dt className="eyebrow">Resolution</dt>
-                <dd className="mt-2 text-base font-semibold text-[var(--ink)]">
-                  {task.resolutionType ? resolutionLabels[task.resolutionType] : 'No resolution'}
-                </dd>
-                <div className="mt-3 grid gap-2">
-                  <Label>Set immediately</Label>
-                  <Select
-                    value={task.resolutionType ?? 'none'}
-                    onValueChange={(next) => {
-                      void (async () => {
-                        beginSaving()
-                        try {
-                          await updateTask({
-                            taskId: task.id,
-                            resolutionType: next === 'none' ? null : (next as ResolutionType),
-                          })
-                          finishSaving()
-                        } catch (error) {
-                          failSaving(error)
-                        }
-                      })()
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No resolution</SelectItem>
-                      {RESOLUTION_VALUES.map((resolution) => (
-                        <SelectItem key={resolution} value={resolution}>
-                          {resolutionLabels[resolution]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <p className="eyebrow">Mini matrix</p>
-            <CardTitle>Where this task sits</CardTitle>
-            <CardDescription>
-              All active tasks stay muted while the current task remains highlighted and anchored in context.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TaskMiniMatrix currentTaskId={task.id} points={points} />
-          </CardContent>
-        </Card>
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {task.status === 'active' ? (
+            <>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  void runSavingMutation(() =>
+                    setTaskStatus({ taskId: task.id, status: 'completed' }),
+                  )
+                }
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Complete
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  void runSavingMutation(() =>
+                    setTaskStatus({ taskId: task.id, status: 'archived' }),
+                  )
+                }
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Archive
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                void runSavingMutation(() =>
+                  restoreTask({
+                    taskId: task.id,
+                    importancePosition: restoreImportancePosition,
+                    urgencyPosition: restoreUrgencyPosition,
+                  }),
+                )
+              }
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restore
+            </Button>
+          )}
+        </div>
       </div>
-    </main>
+
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        {errorMessage && (
+          <div className="rounded-lg border border-[var(--tone-drop)] bg-[var(--tone-drop-soft)] px-3 py-2.5 text-sm text-[var(--tone-drop)]">
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Title edit */}
+        <div className="space-y-1.5">
+          <Label htmlFor="detail-title">Title</Label>
+          <Input
+            id="detail-title"
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            onBlur={async () => {
+              const next = draftTitle.trim()
+              if (!next || next === task.title) { setDraftTitle(task.title); return }
+              beginSaving()
+              try {
+                await updateTask({ taskId: task.id, title: next })
+                finishSaving()
+              } catch (err) { failSaving(err) }
+            }}
+          />
+        </div>
+
+        {/* Description edit */}
+        <div className="space-y-1.5">
+          <Label htmlFor="detail-desc">Description</Label>
+          <Textarea
+            id="detail-desc"
+            value={draftDescription}
+            onChange={(e) => setDraftDescription(e.target.value)}
+            onBlur={async () => {
+              if (draftDescription === task.description) return
+              beginSaving()
+              try {
+                await updateTask({ taskId: task.id, description: draftDescription.trim() })
+                finishSaving()
+              } catch (err) { failSaving(err) }
+            }}
+          />
+        </div>
+
+        <Separator />
+
+        {/* Metadata grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Resolution */}
+          <div className="space-y-1.5">
+            <Label>Resolution</Label>
+            <Select
+              value={task.resolutionType ?? 'none'}
+              onValueChange={(next) => {
+                void runSavingMutation(() =>
+                  updateTask({
+                    taskId: task.id,
+                    resolutionType: next === 'none' ? null : (next as ResolutionType),
+                  }),
+                )
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Unresolved</SelectItem>
+                {RESOLUTION_VALUES.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {resolutionLabels[r]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Due date */}
+          <div className="space-y-1.5">
+            <Label htmlFor="detail-due">Due date</Label>
+            <Input
+              id="detail-due"
+              type="date"
+              value={task.dueDate ?? ''}
+              onChange={(e) => {
+                void runSavingMutation(() =>
+                  updateTask({ taskId: task.id, dueDate: e.target.value || null }),
+                )
+              }}
+            />
+            {task.dueDate && (
+              <p className="text-xs text-[var(--text-tertiary)]">
+                {formatDueDateContext(task.dueDate)}
+              </p>
+            )}
+          </div>
+
+          {/* Importance rank */}
+          <div className="space-y-1.5">
+            <Label>Importance rank</Label>
+            <div className="text-xl font-bold text-[var(--text-primary)]">
+              #{task.importanceRank + 1}
+            </div>
+            <p className="text-xs text-[var(--text-tertiary)]">
+              {(task.importancePercentile * 100).toFixed(0)}th percentile
+            </p>
+            {canReRank(task.status) && (
+              <Select
+                value={String(task.importanceRank)}
+                onValueChange={(next) => {
+                  void runSavingMutation(() =>
+                    updateTask({ taskId: task.id, importancePosition: Number(next) }),
+                  )
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {importance.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {/* Urgency rank */}
+          <div className="space-y-1.5">
+            <Label>Urgency rank</Label>
+            <div className="text-xl font-bold text-[var(--text-primary)]">
+              #{task.urgencyRank + 1}
+            </div>
+            <p className="text-xs text-[var(--text-tertiary)]">
+              {(task.urgencyPercentile * 100).toFixed(0)}th percentile
+            </p>
+            {canReRank(task.status) && (
+              <Select
+                value={String(task.urgencyRank)}
+                onValueChange={(next) => {
+                  void runSavingMutation(() =>
+                    updateTask({ taskId: task.id, urgencyPosition: Number(next) }),
+                  )
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {urgency.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Mini matrix */}
+        <div>
+          <p className="eyebrow mb-3">Position in matrix</p>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden" style={{ height: 220 }}>
+            <EisenhowerMatrix
+              currentTaskId={task.id}
+              points={points}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

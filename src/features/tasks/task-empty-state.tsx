@@ -1,6 +1,5 @@
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function TaskEmptyState({
   errorMessage,
@@ -14,43 +13,53 @@ export function TaskEmptyState({
   onCreate: () => void
 }) {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="relative pb-2">
-        <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,rgba(187,85,53,0.22),transparent_62%),radial-gradient(circle_at_top_right,rgba(112,134,119,0.2),transparent_58%)]" />
-        <div className="relative">
-          <p className="eyebrow">Blank matrix</p>
-          <CardTitle>No ranked tasks yet</CardTitle>
-          <CardDescription>
-            Start with one real task or load sample data to see the matrix,
-            ordered lists, detail editing, and ranking interactions working together.
-          </CardDescription>
+    <div className="empty-state">
+      {/* Decorative quadrant grid */}
+      <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+        <rect x="4" y="4" width="52" height="52" rx="8" fill="var(--tone-delegate-soft)" stroke="var(--tone-delegate)" strokeWidth="1" opacity="0.6" />
+        <rect x="64" y="4" width="52" height="52" rx="8" fill="var(--tone-do-soft)" stroke="var(--tone-do)" strokeWidth="1" opacity="0.6" />
+        <rect x="4" y="64" width="52" height="52" rx="8" fill="var(--tone-drop-soft)" stroke="var(--tone-drop)" strokeWidth="1" opacity="0.6" />
+        <rect x="64" y="64" width="52" height="52" rx="8" fill="var(--tone-schedule-soft)" stroke="var(--tone-schedule)" strokeWidth="1" opacity="0.6" />
+        <text x="30" y="34" textAnchor="middle" dominantBaseline="middle" fill="var(--tone-delegate)" fontSize="8" fontWeight="700" letterSpacing="0.14em">DEL</text>
+        <text x="90" y="34" textAnchor="middle" dominantBaseline="middle" fill="var(--tone-do)" fontSize="8" fontWeight="700" letterSpacing="0.14em">DO</text>
+        <text x="30" y="94" textAnchor="middle" dominantBaseline="middle" fill="var(--tone-drop)" fontSize="8" fontWeight="700" letterSpacing="0.14em">DROP</text>
+        <text x="90" y="94" textAnchor="middle" dominantBaseline="middle" fill="var(--tone-schedule)" fontSize="8" fontWeight="700" letterSpacing="0.14em">SCH</text>
+      </svg>
+
+      <div>
+        <h2 className="text-xl font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+          No tasks yet
+        </h2>
+        <p className="mt-1.5 text-sm text-[var(--text-secondary)] max-w-xs">
+          Start with one real task or load sample data to see the matrix and ranking in action.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 text-xs text-[var(--text-tertiary)] max-w-sm">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2.5 text-center leading-4">
+          Rank by importance & urgency independently
         </div>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="grid gap-3 text-sm text-[var(--muted-ink)] md:grid-cols-3">
-          <div className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3">
-            Rank tasks by importance and urgency independently.
-          </div>
-          <div className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3">
-            Drag points in the matrix to reshape both dimensions at once.
-          </div>
-          <div className="rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel-soft)] px-4 py-3">
-            Open any task to edit details, due dates, and resolution plans.
-          </div>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2.5 text-center leading-4">
+          Drag points in the matrix to reorder both at once
         </div>
-        {errorMessage ? (
-          <p className="rounded-[1rem] border border-[rgba(181,86,57,0.16)] bg-[rgba(181,86,57,0.08)] px-4 py-3 text-sm text-[var(--tone-drop)]">
-            {errorMessage}
-          </p>
-        ) : null}
-        <div className="flex flex-wrap gap-3">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2.5 text-center leading-4">
+          Open any task to edit details and set resolutions
+        </div>
+      </div>
+
+      {errorMessage && (
+        <div className="rounded-lg border border-[var(--tone-drop)] bg-[var(--tone-drop-soft)] px-4 py-2.5 text-sm text-[var(--tone-drop)] max-w-xs text-center">
+          {errorMessage}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3">
         <Button onClick={onCreate}>Create first task</Button>
         <Button disabled={isSeeding} variant="secondary" onClick={() => void onSeed()}>
-          <Sparkles className="h-4 w-4" />
-          {isSeeding ? 'Loading sample tasks...' : 'Load sample tasks'}
+          <Sparkles className="h-3.5 w-3.5" />
+          {isSeeding ? 'Loading…' : 'Load sample data'}
         </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

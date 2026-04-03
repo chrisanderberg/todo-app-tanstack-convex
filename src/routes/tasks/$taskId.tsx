@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { useNavigate, createFileRoute } from '@tanstack/react-router'
+import { SlideOver } from '@/components/layout/slide-over'
 import { TaskDetailView } from '@/features/tasks/task-detail-view'
 
 export const Route = createFileRoute('/tasks/$taskId')({
@@ -7,5 +8,15 @@ export const Route = createFileRoute('/tasks/$taskId')({
 
 function TaskDetailRoute() {
   const { taskId } = Route.useParams()
-  return <TaskDetailView taskId={taskId} />
+  const navigate = useNavigate()
+
+  function handleClose() {
+    void navigate({ to: '/' })
+  }
+
+  return (
+    <SlideOver open onClose={handleClose}>
+      <TaskDetailView taskId={taskId} />
+    </SlideOver>
+  )
 }

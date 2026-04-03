@@ -7,14 +7,11 @@ import {
   type TaskFilter,
 } from '@/features/tasks/use-task-data'
 import { ResolutionBadge, StatusBadge } from '@/features/tasks/task-badges'
+import { getTaskRouteState } from '@/lib/task-route-state'
 import type { TaskViewModel } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 
 export type SortKey = 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
-
-function getTaskRouteState() {
-  return { from: '/list', view: 'list' } as never
-}
 
 const filterLabels: Record<TaskFilter, string> = {
   all: 'All',
@@ -94,7 +91,7 @@ export function TaskTable({
                   <Link
                     to="/tasks/$taskId"
                     params={{ taskId: task.id }}
-                    state={getTaskRouteState()}
+                    state={getTaskRouteState('list')}
                     className="task-row-link-primary"
                   >
                     <div className="font-semibold text-[var(--text-primary)] leading-tight">

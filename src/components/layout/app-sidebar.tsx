@@ -8,6 +8,7 @@ import {
   useMatrixTasks,
   useTaskActions,
 } from '@/features/tasks/use-task-data'
+import { getTaskRouteState, getTaskRouteView } from '@/lib/task-route-state'
 import { resolutionTone, type RankDimension, type TaskViewModel } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 import { moveItemToPosition } from '@/lib/ranking/task-ranking'
@@ -16,10 +17,6 @@ import type { Id } from '../../../convex/_generated/dataModel'
 type DragState = {
   taskId: Id<'tasks'>
   overIndex: number | null
-}
-
-function getTaskRouteState(view: 'matrix' | 'list') {
-  return { from: view === 'list' ? '/list' : '/', view } as never
 }
 
 function SidebarRankList({
@@ -33,8 +30,7 @@ function SidebarRankList({
   const [isMoving, setIsMoving] = useState(false)
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
-  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
-  const view = preservedView ?? (pathname.startsWith('/list') ? 'list' : 'matrix')
+  const view = getTaskRouteView(routerState.location.state, pathname)
   const orderedTasks = tasks
 
   const previewTasks = useMemo(() => {

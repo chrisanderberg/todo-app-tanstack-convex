@@ -40,13 +40,17 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     const prev = previousTaskRef.current
     const titlePristine = draftTitle === (prev?.title ?? '')
     const descPristine = draftDescription === (prev?.description ?? '')
-    if (prev?.id !== task.id || (titlePristine && descPristine)) {
+    const dueDatePristine = draftDueDate === (prev?.dueDate ?? '')
+    const taskChanged = prev?.id !== task.id
+    if (taskChanged || (titlePristine && descPristine && dueDatePristine)) {
       setDraftTitle(task.title)
       setDraftDescription(task.description)
+    }
+    if (taskChanged || dueDatePristine) {
       setDraftDueDate(task.dueDate ?? '')
     }
     previousTaskRef.current = task
-  }, [draftDescription, draftTitle, task])
+  }, [draftDescription, draftDueDate, draftTitle, task])
 
   useEffect(() => {
     return () => {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { MatrixView } from '@/components/layout/matrix-view'
 import { ListView } from '@/components/layout/list-view'
+import { getTaskRouteView } from '@/lib/task-route-state'
 
 /**
  * Always renders the matrix or list view so it stays mounted
@@ -10,7 +11,7 @@ import { ListView } from '@/components/layout/list-view'
 export function MatrixBackground() {
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
-  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
+  const preservedView = routerState.location.state.view
   const lastMainRef = useRef<'matrix' | 'list'>('matrix')
 
   useEffect(() => {
@@ -23,12 +24,10 @@ export function MatrixBackground() {
     else if (pathname === '/') lastMainRef.current = 'matrix'
   }, [pathname, preservedView])
 
-  const current = preservedView
-    ?? (pathname === '/list'
-      ? 'list'
-      : pathname === '/'
-        ? 'matrix'
-        : lastMainRef.current)
+  const current =
+    pathname === '/tasks/$taskId'
+      ? preservedView ?? lastMainRef.current
+      : getTaskRouteView(routerState.location.state, pathname)
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>

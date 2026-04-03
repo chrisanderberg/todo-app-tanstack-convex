@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ResolutionBadge } from '@/features/tasks/task-badges'
 import { formatDueDateContext } from '@/features/tasks/use-task-data'
+import { getTaskRouteState, getTaskRouteView } from '@/lib/task-route-state'
 import type { RankDimension, TaskViewModel } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 import { moveItemToPosition } from '@/lib/ranking/task-ranking'
@@ -13,10 +14,6 @@ import { moveItemToPosition } from '@/lib/ranking/task-ranking'
 type DragState = {
   taskId: Id<'tasks'>
   overIndex: number | null
-}
-
-function getTaskRouteState(view: 'matrix' | 'list') {
-  return { from: view === 'list' ? '/list' : '/', view } as never
 }
 
 export function TaskRankList({
@@ -32,8 +29,7 @@ export function TaskRankList({
   const [isMoving, setIsMoving] = useState(false)
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
-  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
-  const view = preservedView ?? (pathname.startsWith('/list') ? 'list' : 'matrix')
+  const view = getTaskRouteView(routerState.location.state, pathname)
 
   const title = dimension === 'importance' ? 'Importance order' : 'Urgency order'
   const description =

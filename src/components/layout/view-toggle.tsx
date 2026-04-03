@@ -1,16 +1,12 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import { LayoutGrid, List } from 'lucide-react'
+import { getTaskRouteView, getViewState } from '@/lib/task-route-state'
 import { cn } from '@/lib/utils'
-
-function getViewState(view: 'matrix' | 'list') {
-  return { view } as never
-}
 
 export function ViewToggle() {
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
-  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
-  const currentView = preservedView ?? (pathname.startsWith('/list') ? 'list' : 'matrix')
+  const currentView = getTaskRouteView(routerState.location.state, pathname)
   const isMatrix = currentView === 'matrix'
   const isList = currentView === 'list'
 

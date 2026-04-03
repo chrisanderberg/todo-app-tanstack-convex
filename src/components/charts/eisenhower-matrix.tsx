@@ -395,7 +395,15 @@ export function EisenhowerMatrix({
               key={point.id}
               opacity={opacity}
               style={{
-                cursor: isInteractive ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                cursor: !isInteractive
+                  ? 'default'
+                  : isDragging
+                    ? 'grabbing'
+                    : onPointReorder
+                      ? 'grab'
+                      : onPointClick
+                        ? 'pointer'
+                        : 'default',
               }}
               role={onPointClick ? 'button' : undefined}
               tabIndex={onPointClick ? 0 : undefined}

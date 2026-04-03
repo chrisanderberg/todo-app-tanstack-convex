@@ -12,10 +12,7 @@ import {
   useRankingChoices,
   useTaskActions,
 } from '@/features/tasks/use-task-data'
-
-function getTaskRouteState() {
-  return { from: '/', view: 'matrix' } as never
-}
+import { getTaskRouteState } from '@/lib/task-route-state'
 
 export function MatrixView() {
   const navigate = useNavigate()
@@ -80,7 +77,7 @@ export function MatrixView() {
               void navigate({
                 to: '/tasks/$taskId',
                 params: { taskId },
-                state: getTaskRouteState(),
+                state: getTaskRouteState('matrix'),
               })
             }}
             onPointReorder={async (taskId, next) => {

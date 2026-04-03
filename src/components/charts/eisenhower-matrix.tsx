@@ -127,6 +127,12 @@ export function EisenhowerMatrix({
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [reorderError, setReorderError] = useState<string | null>(null)
   const isInteractive = Boolean(onPointClick || onPointReorder)
+  const supportsColorMix = useMemo(
+    () =>
+      typeof CSS !== 'undefined' &&
+      CSS.supports('color', 'color-mix(in srgb, red 0%, white 100%)'),
+    [],
+  )
 
   // Track container size
   useEffect(() => {
@@ -362,6 +368,11 @@ export function EisenhowerMatrix({
             : 'var(--text-tertiary)'
           const r = isCurrent ? 9 : 7
           const opacity = isDragging ? 0.25 : (dragState && !isCurrent ? 0.55 : 1)
+          const pointTransition = dragState ? undefined : 'cx 200ms ease, cy 200ms ease'
+          const fillTone = supportsColorMix
+            ? `color-mix(in srgb, ${tone} 20%, var(--bg-raised))`
+            : tone
+          const fillOpacity = supportsColorMix ? undefined : 0.2
 
           return (
             <g
@@ -369,7 +380,6 @@ export function EisenhowerMatrix({
               opacity={opacity}
               style={{
                 cursor: isInteractive ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                transition: dragState ? 'none' : 'cx 200ms ease, cy 200ms ease',
               }}
               onMouseEnter={() => {
                 if (!isInteractive || dragState) return
@@ -382,7 +392,14 @@ export function EisenhowerMatrix({
             >
               {/* Glow ring for current task */}
               {isCurrent && (
-                <circle cx={px} cy={py} r={r + 5} fill={tone} opacity={0.15} />
+                <circle
+                  cx={px}
+                  cy={py}
+                  r={r + 5}
+                  fill={tone}
+                  opacity={0.15}
+                  style={{ transition: pointTransition }}
+                />
               )}
               {/* Outer ring */}
               <circle
@@ -392,14 +409,17 @@ export function EisenhowerMatrix({
                 stroke={tone}
                 strokeWidth={1.5}
                 opacity={0.5}
+                style={{ transition: pointTransition }}
               />
               {/* Fill */}
               <circle
                 cx={px} cy={py}
                 r={r}
-                fill={`color-mix(in srgb, ${tone} 20%, var(--bg-raised))`}
+                fill={fillTone}
+                fillOpacity={fillOpacity}
                 stroke={tone}
                 strokeWidth={1.5}
+                style={{ transition: pointTransition }}
               />
             </g>
           )

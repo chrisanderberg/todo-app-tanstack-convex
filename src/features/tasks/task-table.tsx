@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUpDown } from 'lucide-react'
 import {
   filterTasks,
@@ -41,7 +41,6 @@ export function TaskTable({
   onSortChange: (value: SortKey) => void
   tasks: TaskViewModel[]
 }) {
-  const navigate = useNavigate()
   const rows = sortTasks(filterTasks(tasks, filter), sortKey)
 
   return (
@@ -86,34 +85,67 @@ export function TaskTable({
           </thead>
           <tbody>
             {rows.map((task) => (
-              <tr
-                key={task.id}
-                onClick={() => void navigate({ to: '/tasks/$taskId', params: { taskId: task.id } })}
-              >
+              <tr key={task.id}>
                 <td style={{ maxWidth: 280 }}>
-                  <div className="font-semibold text-[var(--text-primary)] leading-tight">
-                    {task.title}
-                  </div>
-                  {task.description && (
-                    <div className="mt-0.5 text-xs text-[var(--text-tertiary)] leading-4 line-clamp-1">
-                      {task.description}
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    <div className="font-semibold text-[var(--text-primary)] leading-tight">
+                      {task.title}
                     </div>
-                  )}
+                    {task.description && (
+                      <div className="mt-0.5 text-xs text-[var(--text-tertiary)] leading-4 line-clamp-1">
+                        {task.description}
+                      </div>
+                    )}
+                  </Link>
                 </td>
                 <td>
-                  <StatusBadge status={task.status} />
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    <StatusBadge status={task.status} />
+                  </Link>
                 </td>
                 <td className="text-xs font-bold text-[var(--text-primary)]">
-                  #{task.importanceRank + 1}
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    #{task.importanceRank + 1}
+                  </Link>
                 </td>
                 <td className="text-xs font-bold text-[var(--text-primary)]">
-                  #{task.urgencyRank + 1}
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    #{task.urgencyRank + 1}
+                  </Link>
                 </td>
                 <td className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
-                  {formatDueDateContext(task.dueDate)}
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    {formatDueDateContext(task.dueDate)}
+                  </Link>
                 </td>
                 <td>
-                  <ResolutionBadge resolutionType={task.resolutionType} />
+                  <Link
+                    to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    className="task-row-link"
+                  >
+                    <ResolutionBadge resolutionType={task.resolutionType} />
+                  </Link>
                 </td>
               </tr>
             ))}

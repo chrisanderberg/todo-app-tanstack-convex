@@ -20,6 +20,7 @@ export function MatrixView() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isSeeding, setIsSeeding] = useState(false)
   const [seedError, setSeedError] = useState<string | null>(null)
+  const [reorderError, setReorderError] = useState<string | null>(null)
 
   const createInitialValues = useMemo(
     () => getDefaultTaskFormValues(rankingChoices.importance, rankingChoices.urgency),
@@ -42,6 +43,11 @@ export function MatrixView() {
       </div>
 
       <div className="flex-1 min-h-0 p-4">
+        {reorderError && (
+          <div className="mb-4 rounded-lg border border-[var(--tone-drop)] bg-[var(--tone-drop-soft)] px-3 py-2.5 text-sm text-[var(--tone-drop)]">
+            {reorderError}
+          </div>
+        )}
         {points.length === 0 ? (
           <TaskEmptyState
             errorMessage={seedError}
@@ -69,11 +75,21 @@ export function MatrixView() {
               void navigate({ to: '/tasks/$taskId', params: { taskId } })
             }}
             onPointReorder={async (taskId, next) => {
-              await updateTask({
-                taskId,
-                importancePosition: next.importancePosition,
-                urgencyPosition: next.urgencyPosition,
-              })
+              setReorderError(null)
+              try {
+                await updateTask({
+                  taskId,
+                  importancePosition: next.importancePosition,
+                  urgencyPosition: next.urgencyPosition,
+                })
+              } catch (error) {
+                console.error('Failed to reorder task:', error)
+                setReorderError(
+                  error instanceof Error
+                    ? error.message
+                    : 'Unable to update the task order right now.',
+                )
+              }
             }}
           />
         )}

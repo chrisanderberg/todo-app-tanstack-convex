@@ -197,10 +197,15 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             value={draftDescription}
             onChange={(e) => setDraftDescription(e.target.value)}
             onBlur={async () => {
-              if (draftDescription === task.description) return
+              const next = draftDescription.trim()
+              if (next === task.description) {
+                setDraftDescription(task.description)
+                return
+              }
               beginSaving()
               try {
-                await updateTask({ taskId: task.id, description: draftDescription.trim() })
+                await updateTask({ taskId: task.id, description: next })
+                setDraftDescription(next)
                 finishSaving()
               } catch (err) { failSaving(err) }
             }}

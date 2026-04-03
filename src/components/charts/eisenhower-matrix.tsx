@@ -19,7 +19,7 @@ type EisenhowerMatrixProps = {
   points: MatrixPoint[]
 }
 
-type PointDatum = MatrixPoint & { x: number; y: number }
+type PointDatum = MatrixPoint
 
 type HoverState = {
   point: PointDatum
@@ -123,6 +123,8 @@ export function EisenhowerMatrix({
 }: EisenhowerMatrixProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const isMountedRef = useRef(true)
+  const skipNextClickRef = useRef(false)
+  const skipClickResetTimerRef = useRef<number | null>(null)
   const [size, setSize] = useState({ width: 600, height: 480 })
   const [hovered, setHovered] = useState<HoverState | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -140,7 +142,21 @@ export function EisenhowerMatrix({
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
+      if (skipClickResetTimerRef.current) {
+        window.clearTimeout(skipClickResetTimerRef.current)
+      }
     }
+  }, [])
+
+  const armSkipNextClick = useCallback(() => {
+    skipNextClickRef.current = true
+    if (skipClickResetTimerRef.current) {
+      window.clearTimeout(skipClickResetTimerRef.current)
+    }
+    skipClickResetTimerRef.current = window.setTimeout(() => {
+      skipNextClickRef.current = false
+      skipClickResetTimerRef.current = null
+    }, 250)
   }, [])
 
   useEffect(() => {
@@ -195,11 +211,13 @@ export function EisenhowerMatrix({
       const moved = Math.hypot(dx, dy) > DRAG_THRESHOLD
 
       if (!moved) {
+        armSkipNextClick()
         onPointClick?.(activeDrag.point.id)
         setDragState(null)
         return
       }
 
+      armSkipNextClick()
       const nextPos = getNormalizedPosition(frame, { x: e.clientX, y: e.clientY }, width, height)
       const { importancePosition, urgencyPosition } = getProjectedReorder(
         points, activeDrag.point, nextPos,
@@ -231,7 +249,7 @@ export function EisenhowerMatrix({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [dragState, onPointClick, onPointReorder, points, width, height])
+  }, [armSkipNextClick, dragState, onPointClick, onPointReorder, points, width, height])
 
   // Ghost cursor position in SVG coords
   const ghostSvg = useMemo(() => {
@@ -251,6 +269,11 @@ export function EisenhowerMatrix({
     (e: React.PointerEvent, point: PointDatum) => {
       if (!onPointReorder) return
       e.preventDefault()
+      skipNextClickRef.current = false
+      if (skipClickResetTimerRef.current) {
+        window.clearTimeout(skipClickResetTimerRef.current)
+        skipClickResetTimerRef.current = null
+      }
       setReorderError(null)
       setDragState({
         point,
@@ -264,6 +287,14 @@ export function EisenhowerMatrix({
 
   const handleNodeActivate = useCallback(
     (point: PointDatum) => {
+      if (skipNextClickRef.current) {
+        skipNextClickRef.current = false
+        if (skipClickResetTimerRef.current) {
+          window.clearTimeout(skipClickResetTimerRef.current)
+          skipClickResetTimerRef.current = null
+        }
+        return
+      }
       onPointClick?.(point.id)
     },
     [onPointClick],

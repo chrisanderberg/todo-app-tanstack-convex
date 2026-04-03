@@ -58,6 +58,24 @@ export function useAllTasks() {
   return (useQuery(api.tasks.listTasks, {}) ?? []) as TaskViewModel[]
 }
 
+export function useMatrixTasksState() {
+  const points = useQuery(api.tasks.matrixData, {})
+
+  return {
+    points: (points ?? []) as MatrixPoint[],
+    isLoading: points === undefined,
+  }
+}
+
+export function useAllTasksState() {
+  const tasks = useQuery(api.tasks.listTasks, {})
+
+  return {
+    tasks: (tasks ?? []) as TaskViewModel[],
+    isLoading: tasks === undefined,
+  }
+}
+
 export function useTaskDetail(taskId: string) {
   return useQuery(api.tasks.getTaskDetail, {
     taskId: taskId as Id<'tasks'>,

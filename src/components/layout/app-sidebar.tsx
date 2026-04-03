@@ -4,8 +4,8 @@ import { GripVertical } from 'lucide-react'
 import {
   getDashboardSummary,
   getOrderedActiveTasks,
-  useAllTasks,
-  useMatrixTasks,
+  useAllTasksState,
+  useMatrixTasksState,
   useTaskActions,
 } from '@/features/tasks/use-task-data'
 import { getTaskRouteState, getTaskRouteView } from '@/lib/task-route-state'
@@ -44,17 +44,24 @@ function SidebarRankList({
   }, [dragState, orderedTasks])
 
   const endIndex = orderedTasks.length
+  const previewCount = previewTasks.length
 
-  async function commitMove(index: number) {
-    if (!dragState?.taskId || isMoving) return
-    const currentIndex = orderedTasks.findIndex((t) => t.id === dragState.taskId)
-    if (currentIndex === index) {
+  async function commitMove(index: number, taskId = dragState?.taskId) {
+    if (!taskId || isMoving) return
+    const currentIndex = orderedTasks.findIndex((t) => t.id === taskId)
+    if (currentIndex === -1) {
+      setDragState(null)
+      return
+    }
+    const newLength = Math.max(0, orderedTasks.length - 1)
+    const targetIndex = Math.max(0, Math.min(index, newLength))
+    if (targetIndex === currentIndex) {
       setDragState(null)
       return
     }
     setIsMoving(true)
     try {
-      await onMove(dragState.taskId, index)
+      await onMove(taskId, index)
       setReorderError(null)
     } catch (err) {
       setReorderError(err instanceof Error ? err.message : 'Reorder failed.')
@@ -64,8 +71,15 @@ function SidebarRankList({
     }
   }
 
+  function moveWithControls(taskId: Id<'tasks'>, nextIndex: number) {
+    const targetIndex = Math.max(0, Math.min(nextIndex, endIndex))
+    setReorderError(null)
+    setDragState({ taskId, overIndex: targetIndex })
+    void commitMove(targetIndex, taskId)
+  }
+
   return (
-    <div className="rank-list">
+    <div className="rank-list" role="list" aria-label="Active tasks in ranked order">
       {reorderError && (
         <div className="mb-3 rounded-md border border-(--tone-drop) bg-(--tone-drop-soft) px-3 py-2 text-xs text-(--tone-drop)">
           {reorderError}
@@ -84,6 +98,11 @@ function SidebarRankList({
               isDragging && 'rank-item-dragging',
               isTarget && 'rank-item-target',
             )}
+            role="listitem"
+            tabIndex={0}
+            aria-grabbed={isDragging}
+            aria-roledescription="Draggable ranked task"
+            aria-label={`${task.title}, rank ${index + 1} of ${previewCount}`}
             draggable={!isMoving}
             onDragStart={() => {
               if (!isMoving) {
@@ -102,6 +121,17 @@ function SidebarRankList({
               void commitMove(index)
             }}
             onDragEnd={() => setDragState(null)}
+            onKeyDown={(e) => {
+              if (isMoving) return
+              if (e.key === 'ArrowUp' && index > 0) {
+                e.preventDefault()
+                moveWithControls(task.id, index - 1)
+              }
+              if (e.key === 'ArrowDown' && index < endIndex - 1) {
+                e.preventDefault()
+                moveWithControls(task.id, index + 1)
+              }
+            }}
           >
             <GripVertical className="h-3 w-3 text-[var(--text-tertiary)] flex-shrink-0" />
             <span className="rank-num">#{index + 1}</span>
@@ -114,6 +144,26 @@ function SidebarRankList({
             >
               {task.title}
             </Link>
+            <div className="rank-actions">
+              <button
+                type="button"
+                className="rank-move-btn"
+                onClick={() => moveWithControls(task.id, index - 1)}
+                disabled={isMoving || index === 0}
+                aria-label={`Move ${task.title} up`}
+              >
+                Move up
+              </button>
+              <button
+                type="button"
+                className="rank-move-btn"
+                onClick={() => moveWithControls(task.id, index + 1)}
+                disabled={isMoving || index === endIndex - 1}
+                aria-label={`Move ${task.title} down`}
+              >
+                Move down
+              </button>
+            </div>
           </div>
         )
       })}
@@ -143,31 +193,46 @@ function SidebarRankList({
 }
 
 export function AppSidebar() {
-  const tasks = useAllTasks()
-  const points = useMatrixTasks()
+  const { tasks, isLoading: isTasksLoading } = useAllTasksState()
+  const { points, isLoading: isPointsLoading } = useMatrixTasksState()
   const { updateTask } = useTaskActions()
   const [dimension, setDimension] = useState<RankDimension>('importance')
-  const summary = getDashboardSummary(points)
-  const dimensionTasks = getOrderedActiveTasks(tasks, dimension)
+  const isLoading = isTasksLoading || isPointsLoading
+  const summary = useMemo(
+    () => (isLoading ? null : getDashboardSummary(points)),
+    [isLoading, points],
+  )
+  const dimensionTasks = useMemo(
+    () => (isLoading ? [] : getOrderedActiveTasks(tasks, dimension)),
+    [dimension, isLoading, tasks],
+  )
 
   return (
     <>
       <div className="sidebar-section">
         <p className="sidebar-label">Overview</p>
-        <div className="stat-row">
-          <div className="stat-chip">
-            <span className="stat-label">Active</span>
-            <span className="stat-value">{summary.activeCount}</span>
+        {isLoading || !summary ? (
+          <div className="sidebar-loading" aria-live="polite" aria-label="Loading sidebar summary">
+            <div className="sidebar-skeleton-chip" />
+            <div className="sidebar-skeleton-chip" />
+            <div className="sidebar-skeleton-chip" />
           </div>
-          <div className="stat-chip">
-            <span className="stat-label">Due soon</span>
-            <span className="stat-value">{summary.dueSoonCount}</span>
+        ) : (
+          <div className="stat-row">
+            <div className="stat-chip">
+              <span className="stat-label">Active</span>
+              <span className="stat-value">{summary.activeCount}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-label">Due soon</span>
+              <span className="stat-value">{summary.dueSoonCount}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-label">Unresolved</span>
+              <span className="stat-value">{summary.unresolvedCount}</span>
+            </div>
           </div>
-          <div className="stat-chip">
-            <span className="stat-label">Unresolved</span>
-            <span className="stat-value">{summary.unresolvedCount}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="sidebar-section">
@@ -188,17 +253,25 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <SidebarRankList
-        tasks={dimensionTasks}
-        onMove={async (taskId, index) => {
-          await updateTask({
-            taskId,
-            ...(dimension === 'importance'
-              ? { importancePosition: index }
-              : { urgencyPosition: index }),
-          })
-        }}
-      />
+      {isLoading ? (
+        <div className="rank-list" aria-live="polite" aria-label="Loading ranked tasks">
+          <div className="sidebar-rank-skeleton" />
+          <div className="sidebar-rank-skeleton" />
+          <div className="sidebar-rank-skeleton" />
+        </div>
+      ) : (
+        <SidebarRankList
+          tasks={dimensionTasks}
+          onMove={async (taskId, index) => {
+            await updateTask({
+              taskId,
+              ...(dimension === 'importance'
+                ? { importancePosition: index }
+                : { urgencyPosition: index }),
+            })
+          }}
+        />
+      )}
     </>
   )
 }

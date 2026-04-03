@@ -1,11 +1,12 @@
 import type { Id } from '../../../convex/_generated/dataModel'
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ResolutionBadge } from '@/features/tasks/task-badges'
 import { formatDueDateContext } from '@/features/tasks/use-task-data'
+import { getTaskRouteState, getTaskRouteView } from '@/lib/task-route-state'
 import type { RankDimension, TaskViewModel } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 import { moveItemToPosition } from '@/lib/ranking/task-ranking'
@@ -26,6 +27,9 @@ export function TaskRankList({
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [isMoving, setIsMoving] = useState(false)
+  const routerState = useRouterState()
+  const pathname = routerState.location.pathname
+  const view = getTaskRouteView(routerState.location.state, pathname)
 
   const title = dimension === 'importance' ? 'Importance order' : 'Urgency order'
   const description =
@@ -147,6 +151,7 @@ export function TaskRankList({
                   <Link
                     className="mt-2 block font-semibold text-[var(--ink)] no-underline hover:text-[var(--accent-ink)]"
                     params={{ taskId: task.id }}
+                    state={getTaskRouteState(view)}
                     to="/tasks/$taskId"
                   >
                     {task.title}

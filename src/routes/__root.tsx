@@ -1,100 +1,80 @@
-import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { AppProviders, getConvexSetupError } from '@/lib/convex-provider'
+import { AppSidebar } from '@/components/layout/app-sidebar'
+import { ViewToggle } from '@/components/layout/view-toggle'
+import { MatrixBackground } from '@/components/layout/matrix-background'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'Eisenhower Todo',
-      },
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { title: 'Eisenhower' },
     ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
-  shellComponent: RootDocument,
+  component: RootDocument,
 })
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function AppShell() {
   const convexError = getConvexSetupError()
-  const siteChrome = (
-    <div className="site-frame">
-      <header className="site-header">
-        <div className="page-shell flex flex-wrap items-center justify-between gap-4 py-5">
-          <div>
-            <p className="eyebrow">Local-first task ranking</p>
-            <Link className="brand-mark" to="/">
-              Eisenhower Todo
-            </Link>
+  const routerState = useRouterState()
+  const pathname = routerState.location.pathname
+  const isTaskRoute = pathname.startsWith('/tasks/')
+
+  return (
+    <div className="app-shell">
+      <header className="app-topbar">
+        <div className="app-topbar-inner">
+          <div className="flex items-center gap-2">
+            <span className="brand-mark">Eisenhower</span>
+            <span className="brand-sub">Todo</span>
           </div>
-          <nav className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--panel-soft)] p-1">
-            <Link
-              activeProps={{ className: 'nav-pill nav-pill-active' }}
-              activeOptions={{ exact: true }}
-              className="nav-pill"
-              to="/"
-            >
-              Matrix
-            </Link>
-            <Link
-              activeProps={{ className: 'nav-pill nav-pill-active' }}
-              className="nav-pill"
-              to="/list"
-            >
-              List
-            </Link>
-          </nav>
+          <ViewToggle />
+          <div className="w-[120px]" />
         </div>
       </header>
 
       {convexError ? (
-        <div className="page-shell pt-6">
-          <div className="rounded-[1.4rem] border border-[var(--line-strong)] bg-[var(--paper)] px-5 py-4 text-sm text-[var(--muted-ink)]">
+        <div className="p-6">
+          <div className="rounded-xl border border-(--border-strong) bg-(--bg-raised) px-4 py-3 text-(--text-secondary) text-sm">
             {convexError}
           </div>
         </div>
       ) : (
-        children
-      )}
-
-      <footer className="page-shell pb-10 pt-4 text-sm text-[var(--muted-ink)]">
-        <div className="rounded-[1.4rem] border border-[var(--line)] bg-[var(--panel-soft)] px-5 py-4">
-          Ordered ranks stay canonical. Percentiles remain derived.
+        <div className="app-body">
+          <aside className="app-sidebar">
+            <AppSidebar />
+          </aside>
+          <main className="app-main" style={{ position: 'relative', overflow: 'hidden' }}>
+            {/* Always render the matrix/list route content */}
+            <MatrixBackground />
+            {/* Task detail slide-over renders on top when on /tasks/* route */}
+            {isTaskRoute && <Outlet />}
+          </main>
         </div>
-      </footer>
+      )}
     </div>
   )
+}
+
+function RootDocument() {
+  const convexError = getConvexSetupError()
+  const shell = <AppShell />
 
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
-      <body className="bg-[var(--bg)] font-sans text-[var(--ink)] antialiased">
-        {convexError ? siteChrome : <AppProviders>{siteChrome}</AppProviders>}
+      <body className="bg-[var(--bg)] font-sans text-[var(--text-primary)] antialiased">
+        {convexError ? shell : <AppProviders>{shell}</AppProviders>}
         <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
+          config={{ position: 'bottom-right' }}
+          plugins={[{ name: 'Tanstack Router', render: <TanStackRouterDevtoolsPanel /> }]}
         />
         <Scripts />
       </body>

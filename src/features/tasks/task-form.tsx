@@ -215,7 +215,7 @@ export function TaskFormDialog({
             </div>
           </div>
 
-          {error ? <p className="text-sm text-[var(--tone-drop)]">{error}</p> : null}
+          {error ? <p className="mt-1 text-(--tone-drop) text-sm">{error}</p> : null}
 
           <div className="flex flex-wrap justify-end gap-3">
             <Button

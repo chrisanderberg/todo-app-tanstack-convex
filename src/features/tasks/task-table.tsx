@@ -1,7 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ArrowDown, ArrowUpDown } from 'lucide-react'
 import {
   filterTasks,
   formatDueDateContext,
@@ -9,15 +7,11 @@ import {
   type TaskFilter,
 } from '@/features/tasks/use-task-data'
 import { ResolutionBadge, StatusBadge } from '@/features/tasks/task-badges'
+import { getTaskRouteState } from '@/lib/task-route-state'
 import type { TaskViewModel } from '@/lib/task-model'
+import { cn } from '@/lib/utils'
 
-const sortLabels = {
-  title: 'Title',
-  status: 'Status',
-  importanceRank: 'Importance',
-  urgencyRank: 'Urgency',
-  dueDate: 'Due date',
-} as const
+export type SortKey = 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
 
 const filterLabels: Record<TaskFilter, string> = {
   all: 'All',
@@ -26,6 +20,14 @@ const filterLabels: Record<TaskFilter, string> = {
   archived: 'Archived',
   unresolved: 'Unresolved',
 }
+
+const columns: { key: SortKey; label: string }[] = [
+  { key: 'title', label: 'Task' },
+  { key: 'status', label: 'Status' },
+  { key: 'importanceRank', label: 'Importance' },
+  { key: 'urgencyRank', label: 'Urgency' },
+  { key: 'dueDate', label: 'Due' },
+]
 
 export function TaskTable({
   filter,
@@ -36,92 +38,99 @@ export function TaskTable({
 }: {
   filter: TaskFilter
   onFilterChange: (value: TaskFilter) => void
-  sortKey: 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
-  onSortChange: (value: 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate') => void
+  sortKey: SortKey
+  onSortChange: (value: SortKey) => void
   tasks: TaskViewModel[]
 }) {
   const rows = sortTasks(filterTasks(tasks, filter), sortKey)
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
-        <div>
-          <p className="eyebrow">Sortable list</p>
-          <CardTitle>All tasks</CardTitle>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-[var(--border)] flex-wrap">
+        <div className="filter-bar">
           {(['all', 'active', 'completed', 'archived', 'unresolved'] as const).map((value) => (
-            <Button
+            <button
               key={value}
-              size="sm"
-              variant={filter === value ? 'default' : 'ghost'}
+              className={cn('filter-chip', filter === value && 'filter-chip-active')}
               onClick={() => onFilterChange(value)}
             >
               {filterLabels[value]}
-            </Button>
+            </button>
           ))}
-          {(['title', 'status', 'importanceRank', 'urgencyRank', 'dueDate'] as const).map(
-            (value) => (
-              <Button
-                key={value}
-                size="sm"
-                variant={sortKey === value ? 'default' : 'secondary'}
-                onClick={() => onSortChange(value)}
-              >
-                <ArrowUpDown className="h-3.5 w-3.5" />
-                {sortLabels[value]}
-              </Button>
-            ),
-          )}
         </div>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-left">
+      </div>
+
+      {/* Table */}
+      <div className="task-table-wrap flex-1">
+        <table className="task-table">
           <thead>
-            <tr className="text-xs uppercase tracking-[0.14em] text-[var(--muted-ink)]">
-              <th className="pb-2">Task</th>
-              <th className="pb-2">Status</th>
-              <th className="pb-2">Resolution</th>
-              <th className="pb-2">Due date</th>
-              <th className="pb-2">Importance rank</th>
-              <th className="pb-2">Urgency rank</th>
+            <tr>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={() => onSortChange(col.key)}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {col.label}
+                    {sortKey === col.key ? (
+                      <ArrowDown className="h-3 w-3 text-[var(--accent)]" />
+                    ) : (
+                      <ArrowUpDown className="h-3 w-3 opacity-40" />
+                    )}
+                  </span>
+                </th>
+              ))}
+              <th className="task-table-header-static">Resolution</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((task) => (
-              <tr key={task.id} className="rounded-2xl bg-[var(--panel-soft)]">
-                <td className="rounded-l-[1.2rem] px-4 py-4 align-top">
+              <tr key={task.id}>
+                <td style={{ maxWidth: 280 }}>
                   <Link
-                    className="font-semibold text-[var(--ink)] no-underline hover:text-[var(--accent-ink)]"
-                    params={{ taskId: task.id }}
                     to="/tasks/$taskId"
+                    params={{ taskId: task.id }}
+                    state={getTaskRouteState('list')}
+                    className="task-row-link-primary"
                   >
-                    {task.title}
+                    <div className="font-semibold text-[var(--text-primary)] leading-tight">
+                      {task.title}
+                    </div>
+                    {task.description && (
+                      <div className="mt-0.5 text-xs text-[var(--text-tertiary)] leading-4 line-clamp-1">
+                        {task.description}
+                      </div>
+                    )}
                   </Link>
-                  <p className="mt-1 text-sm text-[var(--muted-ink)]">
-                    {task.description || 'No description'}
-                  </p>
                 </td>
-                <td className="px-4 py-4 align-top">
+                <td>
                   <StatusBadge status={task.status} />
                 </td>
-                <td className="px-4 py-4 align-top">
-                  <ResolutionBadge resolutionType={task.resolutionType} />
-                </td>
-                <td className="px-4 py-4 align-top text-sm text-[var(--muted-ink)]">
-                  {formatDueDateContext(task.dueDate)}
-                </td>
-                <td className="px-4 py-4 align-top text-sm font-semibold text-[var(--ink)]">
+                <td className="text-xs font-bold text-[var(--text-primary)]">
                   #{task.importanceRank + 1}
                 </td>
-                <td className="rounded-r-[1.2rem] px-4 py-4 align-top text-sm font-semibold text-[var(--ink)]">
+                <td className="text-xs font-bold text-[var(--text-primary)]">
                   #{task.urgencyRank + 1}
+                </td>
+                <td className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+                  {formatDueDateContext(task.dueDate)}
+                </td>
+                <td>
+                  <ResolutionBadge resolutionType={task.resolutionType} />
                 </td>
               </tr>
             ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-sm text-[var(--text-tertiary)]">
+                  No tasks match this filter.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

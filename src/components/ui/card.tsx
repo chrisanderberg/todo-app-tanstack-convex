@@ -5,7 +5,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        'rounded-[1.6rem] border border-[var(--line)] bg-[var(--panel)] shadow-[0_22px_60px_rgba(45,41,37,0.08)] backdrop-blur-sm',
+        'rounded-xl border border-[var(--border)] bg-[var(--bg-raised)]',
         className,
       )}
       {...props}
@@ -17,7 +17,7 @@ export function CardHeader({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('flex flex-col gap-2 p-6', className)} {...props} />
+  return <div className={cn('flex flex-col gap-1.5 p-5', className)} {...props} />
 }
 
 export function CardTitle({
@@ -27,7 +27,7 @@ export function CardTitle({
   return (
     <h2
       className={cn(
-        'font-display text-2xl font-semibold tracking-[-0.03em] text-[var(--ink)]',
+        'text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]',
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ export function CardDescription({
   ...props
 }: HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-sm leading-6 text-[var(--muted-ink)]', className)} {...props} />
+    <p className={cn('text-sm leading-6 text-[var(--text-secondary)]', className)} {...props} />
   )
 }
 
@@ -48,5 +48,5 @@ export function CardContent({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('px-6 pb-6', className)} {...props} />
+  return <div className={cn('px-5 pb-5', className)} {...props} />
 }

@@ -15,7 +15,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-50 bg-[rgba(28,24,20,0.44)] backdrop-blur-sm transition-all duration-200 data-[state=closed]:opacity-0 data-[state=closed]:backdrop-blur-none data-[state=open]:opacity-100 data-[state=open]:backdrop-blur-sm',
+      'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-all duration-200 data-[state=closed]:opacity-0 data-[state=open]:opacity-100',
       className,
     )}
     {...props}
@@ -32,13 +32,13 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-1/2 top-1/2 z-50 grid w-[min(94vw,760px)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[2rem] border border-[var(--line)] bg-[var(--panel)] p-6 shadow-[0_30px_80px_rgba(24,20,18,0.22)] transition-all duration-200 data-[state=closed]:scale-95 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=open]:opacity-100',
+        'fixed left-1/2 top-1/2 z-50 grid w-[min(94vw,680px)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)] transition-all duration-200 data-[state=closed]:scale-95 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=open]:opacity-100',
         className,
       )}
       {...props}
     >
       {children}
-      <DialogClose className="absolute right-5 top-5 rounded-full p-2 text-[var(--muted-ink)] transition hover:bg-[var(--panel-soft)] hover:text-[var(--ink)]">
+      <DialogClose className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--text-tertiary)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogClose>
@@ -51,7 +51,7 @@ function DialogHeader({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('space-y-2 pr-10', className)} {...props} />
+  return <div className={cn('space-y-1.5 pr-8', className)} {...props} />
 }
 
 function DialogTitle({
@@ -61,7 +61,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       className={cn(
-        'font-display text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)]',
+        'text-xl font-bold tracking-[-0.02em] text-[var(--text-primary)]',
         className,
       )}
       {...props}
@@ -75,7 +75,7 @@ function DialogDescription({
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
-      className={cn('text-sm leading-6 text-[var(--muted-ink)]', className)}
+      className={cn('text-sm leading-6 text-[var(--text-secondary)]', className)}
       {...props}
     />
   )

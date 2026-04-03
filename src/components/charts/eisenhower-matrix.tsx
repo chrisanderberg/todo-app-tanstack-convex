@@ -122,6 +122,7 @@ export function EisenhowerMatrix({
   points,
 }: EisenhowerMatrixProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const isMountedRef = useRef(true)
   const [size, setSize] = useState({ width: 600, height: 480 })
   const [hovered, setHovered] = useState<HoverState | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -135,6 +136,13 @@ export function EisenhowerMatrix({
   )
 
   // Track container size
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
@@ -198,10 +206,12 @@ export function EisenhowerMatrix({
       )
       try {
         await commit(activeDrag.point.id, { importancePosition, urgencyPosition })
+        if (!isMountedRef.current) return
         setDragState(null)
         setHovered(null)
         setReorderError(null)
       } catch (err) {
+        if (!isMountedRef.current) return
         setDragState(null)
         setHovered(null)
         setReorderError(err instanceof Error ? err.message : 'Reorder failed.')

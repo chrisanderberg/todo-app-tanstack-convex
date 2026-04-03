@@ -28,6 +28,7 @@ function SidebarRankList({
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [isMoving, setIsMoving] = useState(false)
+  const [reorderError, setReorderError] = useState<string | null>(null)
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
   const view = getTaskRouteView(routerState.location.state, pathname)
@@ -54,6 +55,9 @@ function SidebarRankList({
     setIsMoving(true)
     try {
       await onMove(dragState.taskId, index)
+      setReorderError(null)
+    } catch (err) {
+      setReorderError(err instanceof Error ? err.message : 'Reorder failed.')
     } finally {
       setIsMoving(false)
       setDragState(null)
@@ -62,6 +66,11 @@ function SidebarRankList({
 
   return (
     <div className="rank-list">
+      {reorderError && (
+        <div className="mb-3 rounded-md border border-(--tone-drop) bg-(--tone-drop-soft) px-3 py-2 text-xs text-(--tone-drop)">
+          {reorderError}
+        </div>
+      )}
       {previewTasks.map((task, index) => {
         const isDragging = dragState?.taskId === task.id
         const isTarget = dragState?.overIndex === index && dragState.taskId !== task.id
@@ -77,7 +86,10 @@ function SidebarRankList({
             )}
             draggable={!isMoving}
             onDragStart={() => {
-              if (!isMoving) setDragState({ taskId: task.id, overIndex: index })
+              if (!isMoving) {
+                setReorderError(null)
+                setDragState({ taskId: task.id, overIndex: index })
+              }
             }}
             onDragOver={(e) => {
               e.preventDefault()

@@ -25,7 +25,7 @@ export function MatrixBackground() {
   }, [pathname, preservedView])
 
   const current =
-    pathname === '/tasks/$taskId'
+    pathname.startsWith('/tasks/')
       ? preservedView ?? lastMainRef.current
       : getTaskRouteView(routerState.location.state, pathname)
 

@@ -7,6 +7,7 @@
 }
 
 :root {
+  --header-height: 56px;
   /* Backgrounds */
   --bg: #0a0a0c;
   --bg-raised: #141418;
@@ -96,10 +97,10 @@ select {
   position: sticky;
   top: 0;
   z-index: 40;
-  height: 56px;
+  height: var(--header-height);
   display: flex;
   align-items: center;
-  background: rgba(10, 10, 12, 0.85);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -117,6 +118,7 @@ select {
 .app-body {
   display: flex;
   flex: 1;
+  height: calc(100vh - var(--header-height));
   min-height: 0;
   overflow: hidden;
 }
@@ -391,7 +393,16 @@ select {
   color: var(--text-secondary);
 }
 
+.task-table-header-static {
+  cursor: default !important;
+}
+
+.task-table-header-static:hover {
+  color: var(--text-tertiary) !important;
+}
+
 .task-table tbody tr {
+  position: relative;
   border-bottom: 1px solid var(--border);
 }
 
@@ -404,14 +415,22 @@ select {
   vertical-align: middle;
 }
 
-.task-row-link {
+.task-row-link-primary {
+  position: relative;
   display: block;
   margin: -0.65rem -0.75rem;
   padding: 0.65rem 0.75rem;
   text-decoration: none;
+  z-index: 1;
 }
 
-.task-row-link:focus-visible {
+.task-row-link-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.task-row-link-primary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
   border-radius: 0.35rem;
@@ -454,7 +473,7 @@ select {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 50;
-  animation: fadeIn 200ms ease;
+  animation: fade-in 200ms ease;
 }
 
 .slideover-panel {
@@ -468,17 +487,21 @@ select {
   border-left: 1px solid var(--border-strong);
   z-index: 51;
   overflow-y: auto;
-  animation: slideInRight 220ms ease-out;
+  animation: slide-in-right 220ms ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideInRight {
+@keyframes slide-in-right {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
+}
+
+.task-detail-mini-matrix {
+  height: 220px;
 }
 
 /* ─── Misc ───────────────────────────────────────────── */

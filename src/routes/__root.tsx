@@ -40,12 +40,12 @@ function AppShell() {
 
       {convexError ? (
         <div className="p-6">
-          <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+          <div className="rounded-xl border border-(--border-strong) bg-(--bg-raised) px-4 py-3 text-(--text-secondary) text-sm">
             {convexError}
           </div>
         </div>
       ) : (
-        <div className="app-body" style={{ height: 'calc(100vh - 56px)' }}>
+        <div className="app-body">
           <aside className="app-sidebar">
             <AppSidebar />
           </aside>

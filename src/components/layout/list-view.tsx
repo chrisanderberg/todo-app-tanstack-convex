@@ -6,22 +6,22 @@ import { TaskFormDialog } from '@/features/tasks/task-form'
 import {
   filterTasks,
   getDefaultTaskFormValues,
+  submitCreateTask,
   useAllTasks,
   useRankingChoices,
   useTaskActions,
   type TaskFilter,
 } from '@/features/tasks/use-task-data'
+import type { SortKey } from '@/features/tasks/task-table'
 
 export function ListView() {
   const tasks = useAllTasks()
   const rankingChoices = useRankingChoices()
   const { createTask } = useTaskActions()
   const [filter, setFilter] = useState<TaskFilter>('all')
-  const [sortKey, setSortKey] = useState<
-    'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
-  >('importanceRank')
+  const [sortKey, setSortKey] = useState<SortKey>('importanceRank')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const filteredCount = filterTasks(tasks, filter).length
+  const filteredCount = useMemo(() => filterTasks(tasks, filter).length, [tasks, filter])
 
   const createInitialValues = useMemo(
     () => getDefaultTaskFormValues(rankingChoices.importance, rankingChoices.urgency),
@@ -61,22 +61,7 @@ export function ListView() {
         isOpen={isCreateOpen}
         mode="create"
         onOpenChange={setIsCreateOpen}
-        onSubmit={async (values) => {
-          try {
-            await createTask({
-              title: values.title,
-              description: values.description,
-              dueDate: values.dueDate || null,
-              resolutionType: values.resolutionType,
-              importancePosition: values.importancePosition,
-              urgencyPosition: values.urgencyPosition,
-            })
-          } catch (error) {
-            throw error instanceof Error
-              ? error
-              : new Error('Something went wrong while creating the task.')
-          }
-        }}
+        onSubmit={(values) => submitCreateTask(createTask, values)}
         title="New task"
         urgencyOptions={rankingChoices.urgency}
       />

@@ -252,12 +252,28 @@ export function EisenhowerMatrix({
     [onPointReorder],
   )
 
+  const handleNodeActivate = useCallback(
+    (point: PointDatum) => {
+      onPointClick?.(point.id)
+    },
+    [onPointClick],
+  )
+
+  const handleNodeKeyDown = useCallback(
+    (e: React.KeyboardEvent, point: PointDatum) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      e.preventDefault()
+      handleNodeActivate(point)
+    },
+    [handleNodeActivate],
+  )
+
   return (
     <div ref={containerRef} className="matrix-container" style={{ position: 'relative' }}>
       {reorderError && (
         <div
           style={{ position: 'absolute', top: 8, left: MARGIN.left, right: MARGIN.right, zIndex: 10 }}
-          className="rounded-md bg-[var(--tone-drop-soft)] border border-[var(--tone-drop)] px-3 py-1.5 text-xs text-[var(--tone-drop)]"
+          className="rounded-md border border-(--tone-drop) bg-(--tone-drop-soft) px-3 py-1.5 text-xs text-(--tone-drop)"
         >
           {reorderError}
         </div>
@@ -381,6 +397,9 @@ export function EisenhowerMatrix({
               style={{
                 cursor: isInteractive ? (isDragging ? 'grabbing' : 'grab') : 'default',
               }}
+              role={onPointClick ? 'button' : undefined}
+              tabIndex={onPointClick ? 0 : undefined}
+              aria-label={onPointClick ? `Open task ${point.title}` : undefined}
               onMouseEnter={() => {
                 if (!isInteractive || dragState) return
                 setHovered({ point, svgX: px, svgY: py })
@@ -388,6 +407,8 @@ export function EisenhowerMatrix({
               onMouseLeave={() => {
                 if (!dragState) setHovered(null)
               }}
+              onClick={() => handleNodeActivate(point)}
+              onKeyDown={(e) => handleNodeKeyDown(e, point)}
               onPointerDown={(e) => handleNodePointerDown(e, point)}
             >
               {/* Glow ring for current task */}
@@ -472,13 +493,13 @@ export function EisenhowerMatrix({
             pointerEvents: 'none',
             zIndex: 20,
           }}
-          className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-raised)] px-4 py-3 shadow-[0_16px_48px_rgba(0,0,0,0.5)] max-w-[220px]"
+          className="rounded-xl border border-(--border-strong) bg-(--bg-raised) px-4 py-3 shadow-[0_16px_48px_rgba(0,0,0,0.5)] max-w-[220px]"
         >
-          <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
+          <p className="text-(--text-primary) text-sm font-semibold leading-tight">
             {hovered.point.title}
           </p>
           {hovered.point.description && (
-            <p className="mt-1 text-xs text-[var(--text-secondary)] leading-5 line-clamp-2">
+            <p className="mt-1 text-(--text-secondary) text-xs leading-5 line-clamp-2">
               {hovered.point.description}
             </p>
           )}
@@ -492,7 +513,7 @@ export function EisenhowerMatrix({
               </span>
             )}
             {hovered.point.dueDate && (
-              <span className="text-xs text-[var(--text-tertiary)]">
+              <span className="text-(--text-tertiary) text-xs">
                 {formatShortDueDate(hovered.point.dueDate)}
               </span>
             )}
@@ -511,7 +532,7 @@ export function EisenhowerMatrix({
             pointerEvents: 'none',
             zIndex: 20,
           }}
-          className="rounded-full border border-[var(--border-strong)] bg-[var(--bg-raised)] px-4 py-1.5 text-xs font-bold tracking-[0.12em] uppercase text-[var(--text-secondary)] shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+          className="rounded-full border border-(--border-strong) bg-(--bg-raised) px-4 py-1.5 text-(--text-secondary) text-xs font-bold tracking-[0.12em] uppercase shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
         >
           Importance #{projectedRanks.importance} · Urgency #{projectedRanks.urgency}
         </div>

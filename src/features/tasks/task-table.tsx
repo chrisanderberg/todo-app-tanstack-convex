@@ -10,7 +10,11 @@ import { ResolutionBadge, StatusBadge } from '@/features/tasks/task-badges'
 import type { TaskViewModel } from '@/lib/task-model'
 import { cn } from '@/lib/utils'
 
-type SortKey = 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
+export type SortKey = 'title' | 'status' | 'importanceRank' | 'urgencyRank' | 'dueDate'
+
+function getTaskRouteState() {
+  return { from: '/list', view: 'list' } as never
+}
 
 const filterLabels: Record<TaskFilter, string> = {
   all: 'All',
@@ -80,7 +84,7 @@ export function TaskTable({
                   </span>
                 </th>
               ))}
-              <th>Resolution</th>
+              <th className="task-table-header-static">Resolution</th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +94,8 @@ export function TaskTable({
                   <Link
                     to="/tasks/$taskId"
                     params={{ taskId: task.id }}
-                    className="task-row-link"
+                    state={getTaskRouteState()}
+                    className="task-row-link-primary"
                   >
                     <div className="font-semibold text-[var(--text-primary)] leading-tight">
                       {task.title}
@@ -103,49 +108,19 @@ export function TaskTable({
                   </Link>
                 </td>
                 <td>
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="task-row-link"
-                  >
-                    <StatusBadge status={task.status} />
-                  </Link>
+                  <StatusBadge status={task.status} />
                 </td>
                 <td className="text-xs font-bold text-[var(--text-primary)]">
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="task-row-link"
-                  >
-                    #{task.importanceRank + 1}
-                  </Link>
+                  #{task.importanceRank + 1}
                 </td>
                 <td className="text-xs font-bold text-[var(--text-primary)]">
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="task-row-link"
-                  >
-                    #{task.urgencyRank + 1}
-                  </Link>
+                  #{task.urgencyRank + 1}
                 </td>
                 <td className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="task-row-link"
-                  >
-                    {formatDueDateContext(task.dueDate)}
-                  </Link>
+                  {formatDueDateContext(task.dueDate)}
                 </td>
                 <td>
-                  <Link
-                    to="/tasks/$taskId"
-                    params={{ taskId: task.id }}
-                    className="task-row-link"
-                  >
-                    <ResolutionBadge resolutionType={task.resolutionType} />
-                  </Link>
+                  <ResolutionBadge resolutionType={task.resolutionType} />
                 </td>
               </tr>
             ))}

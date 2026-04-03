@@ -7,10 +7,15 @@ import { TaskEmptyState } from '@/features/tasks/task-empty-state'
 import { TaskFormDialog } from '@/features/tasks/task-form'
 import {
   getDefaultTaskFormValues,
+  submitCreateTask,
   useMatrixTasks,
   useRankingChoices,
   useTaskActions,
 } from '@/features/tasks/use-task-data'
+
+function getTaskRouteState() {
+  return { from: '/', view: 'matrix' } as never
+}
 
 export function MatrixView() {
   const navigate = useNavigate()
@@ -72,7 +77,11 @@ export function MatrixView() {
           <EisenhowerMatrix
             points={points}
             onPointClick={(taskId) => {
-              void navigate({ to: '/tasks/$taskId', params: { taskId } })
+              void navigate({
+                to: '/tasks/$taskId',
+                params: { taskId },
+                state: getTaskRouteState(),
+              })
             }}
             onPointReorder={async (taskId, next) => {
               setReorderError(null)
@@ -102,22 +111,7 @@ export function MatrixView() {
         isOpen={isCreateOpen}
         mode="create"
         onOpenChange={setIsCreateOpen}
-        onSubmit={async (values) => {
-          try {
-            await createTask({
-              title: values.title,
-              description: values.description,
-              dueDate: values.dueDate || null,
-              resolutionType: values.resolutionType,
-              importancePosition: values.importancePosition,
-              urgencyPosition: values.urgencyPosition,
-            })
-          } catch (error) {
-            throw error instanceof Error
-              ? error
-              : new Error('Something went wrong while creating the task.')
-          }
-        }}
+        onSubmit={(values) => submitCreateTask(createTask, values)}
         title="New task"
         urgencyOptions={rankingChoices.urgency}
       />

@@ -10,13 +10,22 @@ type SlideOverProps = {
 export function SlideOver({ open, onClose, children }: SlideOverProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   function getFocusableElements(panel: HTMLDivElement) {
     return Array.from(
       panel.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       ),
-    ).filter((element) => !element.hasAttribute('disabled') && !element.getAttribute('aria-hidden'))
+    ).filter(
+      (element) =>
+        !element.hasAttribute('disabled') &&
+        element.getAttribute('aria-hidden') !== 'true',
+    )
   }
 
   useEffect(() => {
@@ -31,7 +40,7 @@ export function SlideOver({ open, onClose, children }: SlideOverProps) {
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
 
@@ -68,7 +77,7 @@ export function SlideOver({ open, onClose, children }: SlideOverProps) {
       previousFocusRef.current?.focus()
       previousFocusRef.current = null
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 

@@ -27,6 +27,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
   const { restoreTask, setTaskStatus, updateTask } = useTaskActions()
   const [draftTitle, setDraftTitle] = useState('')
   const [draftDescription, setDraftDescription] = useState('')
+  const [draftDueDate, setDraftDueDate] = useState('')
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const saveTimerRef = useRef<number | null>(null)
@@ -42,6 +43,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
     if (prev?.id !== task.id || (titlePristine && descPristine)) {
       setDraftTitle(task.title)
       setDraftDescription(task.description)
+      setDraftDueDate(task.dueDate ?? '')
     }
     previousTaskRef.current = task
   }, [draftDescription, draftTitle, task])
@@ -180,11 +182,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             onBlur={async () => {
               const next = draftTitle.trim()
               if (!next || next === task.title) { setDraftTitle(task.title); return }
-              beginSaving()
-              try {
-                await updateTask({ taskId: task.id, title: next })
-                finishSaving()
-              } catch (err) { failSaving(err) }
+              await runSavingMutation(() => updateTask({ taskId: task.id, title: next }))
             }}
           />
         </div>
@@ -202,12 +200,8 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
                 setDraftDescription(task.description)
                 return
               }
-              beginSaving()
-              try {
-                await updateTask({ taskId: task.id, description: next })
-                setDraftDescription(next)
-                finishSaving()
-              } catch (err) { failSaving(err) }
+              setDraftDescription(next)
+              await runSavingMutation(() => updateTask({ taskId: task.id, description: next }))
             }}
           />
         </div>
@@ -250,11 +244,12 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
             <Input
               id="detail-due"
               type="date"
-              value={task.dueDate ?? ''}
-              onChange={(e) => {
-                void runSavingMutation(() =>
-                  updateTask({ taskId: task.id, dueDate: e.target.value || null }),
-                )
+              value={draftDueDate}
+              onChange={(e) => setDraftDueDate(e.target.value)}
+              onBlur={(e) => {
+                const next = e.target.value || null
+                if (next === task.dueDate) return
+                void runSavingMutation(() => updateTask({ taskId: task.id, dueDate: next }))
               }}
             />
             {task.dueDate && (
@@ -334,7 +329,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
         {/* Mini matrix */}
         <div>
           <p className="eyebrow mb-3">Position in matrix</p>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden" style={{ height: 220 }}>
+          <div className="task-detail-mini-matrix rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] overflow-hidden">
             <EisenhowerMatrix
               currentTaskId={task.id}
               points={points}

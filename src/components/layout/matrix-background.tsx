@@ -10,18 +10,25 @@ import { ListView } from '@/components/layout/list-view'
 export function MatrixBackground() {
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
+  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
   const lastMainRef = useRef<'matrix' | 'list'>('matrix')
 
   useEffect(() => {
+    if (preservedView) {
+      lastMainRef.current = preservedView
+      return
+    }
+
     if (pathname === '/list') lastMainRef.current = 'list'
     else if (pathname === '/') lastMainRef.current = 'matrix'
-  }, [pathname])
+  }, [pathname, preservedView])
 
-  const current = pathname === '/list'
-    ? 'list'
-    : pathname === '/'
-      ? 'matrix'
-      : lastMainRef.current
+  const current = preservedView
+    ?? (pathname === '/list'
+      ? 'list'
+      : pathname === '/'
+        ? 'matrix'
+        : lastMainRef.current)
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>

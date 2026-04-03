@@ -23,6 +23,33 @@ export type TaskFormValues = {
   urgencyPosition: number
 }
 
+export async function submitCreateTask(
+  createTask: (args: {
+    title: string
+    description: string
+    dueDate: string | null
+    resolutionType: ResolutionType
+    importancePosition: number
+    urgencyPosition: number
+  }) => Promise<unknown>,
+  values: TaskFormValues,
+) {
+  try {
+    await createTask({
+      title: values.title,
+      description: values.description,
+      dueDate: values.dueDate || null,
+      resolutionType: values.resolutionType,
+      importancePosition: values.importancePosition,
+      urgencyPosition: values.urgencyPosition,
+    })
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('Something went wrong while creating the task.')
+  }
+}
+
 export function useMatrixTasks() {
   return useQuery(api.tasks.matrixData, {}) ?? []
 }

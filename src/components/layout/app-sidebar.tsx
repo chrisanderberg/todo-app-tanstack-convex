@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { GripVertical } from 'lucide-react'
 import {
   getDashboardSummary,
@@ -18,26 +18,24 @@ type DragState = {
   overIndex: number | null
 }
 
+function getTaskRouteState(view: 'matrix' | 'list') {
+  return { from: view === 'list' ? '/list' : '/', view } as never
+}
+
 function SidebarRankList({
   tasks,
-  dimension,
   onMove,
 }: {
   tasks: TaskViewModel[]
-  dimension: RankDimension
   onMove: (taskId: Id<'tasks'>, index: number) => Promise<void>
 }) {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [isMoving, setIsMoving] = useState(false)
-
-  const orderedTasks = useMemo(
-    () =>
-      [...tasks].sort((a, b) => {
-        const key = dimension === 'importance' ? 'importanceRank' : 'urgencyRank'
-        return a[key] - b[key]
-      }),
-    [tasks, dimension],
-  )
+  const routerState = useRouterState()
+  const pathname = routerState.location.pathname
+  const preservedView = (routerState.location.state as { view?: 'matrix' | 'list' } | undefined)?.view
+  const view = preservedView ?? (pathname.startsWith('/list') ? 'list' : 'matrix')
+  const orderedTasks = tasks
 
   const previewTasks = useMemo(() => {
     if (!dragState || dragState.overIndex === null) return orderedTasks
@@ -104,6 +102,7 @@ function SidebarRankList({
               className="rank-title"
               to="/tasks/$taskId"
               params={{ taskId: task.id }}
+              state={getTaskRouteState(view)}
             >
               {task.title}
             </Link>
@@ -183,7 +182,6 @@ export function AppSidebar() {
 
       <SidebarRankList
         tasks={dimensionTasks}
-        dimension={dimension}
         onMove={async (taskId, index) => {
           await updateTask({
             taskId,

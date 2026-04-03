@@ -80,6 +80,9 @@ partially defined upfront and extended as development proceeds.
 - Prefer pairing drag-and-drop ranking interactions with simple button-based or
   keyboard-friendly move controls so ranking remains usable on touch devices
   and without precise pointer dragging.
+- Prefer non-essential UI motion to respect `prefers-reduced-motion`, and keep
+  pointer-driven drag interactions resilient to cancellation or collapsed
+  layouts so rankings do not produce invalid positions during edge cases.
 - Prefer the main route to open directly into the working task data and primary
   controls rather than a marketing-style or onboarding-style hero section.
 - Prefer the main matrix route to surface live task summaries such as due soon,

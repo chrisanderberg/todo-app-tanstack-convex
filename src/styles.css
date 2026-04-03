@@ -21,7 +21,7 @@
   /* Text */
   --text-primary: #ededef;
   --text-secondary: #8b8b96;
-  --text-tertiary: #55555e;
+  --text-tertiary: #8b8b95;
 
   /* Accent */
   --accent: #6366f1;
@@ -91,6 +91,7 @@ select {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-topbar {
@@ -571,6 +572,30 @@ select {
   z-index: 51;
   overflow-y: auto;
   animation: slide-in-right 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition: none !important;
+  }
+
+  .sidebar-skeleton-chip,
+  .sidebar-rank-skeleton,
+  .slideover-overlay,
+  .slideover-panel {
+    animation: none !important;
+  }
+
+  .slideover-overlay,
+  .slideover-panel {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 @keyframes fade-in {

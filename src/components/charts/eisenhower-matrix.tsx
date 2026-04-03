@@ -76,8 +76,12 @@ function getNormalizedPosition(
 ) {
   const innerW = width - MARGIN.left - MARGIN.right
   const innerH = height - MARGIN.top - MARGIN.bottom
-  const nx = Math.max(0, Math.min(1, (pointer.x - frame.left - MARGIN.left) / innerW))
-  const nyFromTop = Math.max(0, Math.min(1, (pointer.y - frame.top - MARGIN.top) / innerH))
+  const nx = innerW > 0
+    ? Math.max(0, Math.min(1, (pointer.x - frame.left - MARGIN.left) / innerW))
+    : 0.5
+  const nyFromTop = innerH > 0
+    ? Math.max(0, Math.min(1, (pointer.y - frame.top - MARGIN.top) / innerH))
+    : 0.5
   return { x: nx, y: 1 - nyFromTop }
 }
 
@@ -236,6 +240,13 @@ export function EisenhowerMatrix({
       }
     }
 
+    function handlePointerCancel(e: PointerEvent) {
+      if (e.pointerId !== activeDrag.pointerId) return
+      setDragState(null)
+      setHovered(null)
+      setReorderError(null)
+    }
+
     function handlePointerMove(e: PointerEvent) {
       if (e.pointerId !== activeDrag.pointerId) return
       setDragState((cur) =>
@@ -245,9 +256,11 @@ export function EisenhowerMatrix({
 
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerCancel)
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerCancel)
     }
   }, [armSkipNextClick, dragState, onPointClick, onPointReorder, points, width, height])
 
@@ -268,6 +281,7 @@ export function EisenhowerMatrix({
   const handleNodePointerDown = useCallback(
     (e: React.PointerEvent, point: PointDatum) => {
       if (!onPointReorder) return
+      if (e.button !== 0) return
       e.preventDefault()
       skipNextClickRef.current = false
       if (skipClickResetTimerRef.current) {
@@ -310,7 +324,11 @@ export function EisenhowerMatrix({
   )
 
   return (
-    <div ref={containerRef} className="matrix-container" style={{ position: 'relative' }}>
+    <div
+      ref={containerRef}
+      className="matrix-container"
+      style={{ position: 'relative', touchAction: 'none' }}
+    >
       {reorderError && (
         <div
           style={{ position: 'absolute', top: 8, left: MARGIN.left, right: MARGIN.right, zIndex: 10 }}

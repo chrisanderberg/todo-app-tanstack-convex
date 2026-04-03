@@ -26,6 +26,7 @@ function SidebarRankList({
   tasks: TaskViewModel[]
   onMove: (taskId: Id<'tasks'>, index: number) => Promise<void>
 }) {
+  const dragInstructionsId = 'dragInstructions'
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [isMoving, setIsMoving] = useState(false)
   const [reorderError, setReorderError] = useState<string | null>(null)
@@ -61,7 +62,7 @@ function SidebarRankList({
     }
     setIsMoving(true)
     try {
-      await onMove(taskId, index)
+      await onMove(taskId, targetIndex)
       setReorderError(null)
     } catch (err) {
       setReorderError(err instanceof Error ? err.message : 'Reorder failed.')
@@ -80,6 +81,9 @@ function SidebarRankList({
 
   return (
     <div className="rank-list" role="list" aria-label="Active tasks in ranked order">
+      <p id={dragInstructionsId} className="sr-only">
+        Drag to reorder tasks, or use the arrow keys to move the focused task up or down.
+      </p>
       {reorderError && (
         <div className="mb-3 rounded-md border border-(--tone-drop) bg-(--tone-drop-soft) px-3 py-2 text-xs text-(--tone-drop)">
           {reorderError}
@@ -100,7 +104,7 @@ function SidebarRankList({
             )}
             role="listitem"
             tabIndex={0}
-            aria-grabbed={isDragging}
+            aria-describedby={dragInstructionsId}
             aria-roledescription="Draggable ranked task"
             aria-label={`${task.title}, rank ${index + 1} of ${previewCount}`}
             draggable={!isMoving}
@@ -239,12 +243,14 @@ export function AppSidebar() {
         <p className="sidebar-label">Rank by</p>
         <div className="dimension-toggle">
           <button
+            type="button"
             className={cn('dimension-btn', dimension === 'importance' && 'dimension-btn-active')}
             onClick={() => setDimension('importance')}
           >
             Importance
           </button>
           <button
+            type="button"
             className={cn('dimension-btn', dimension === 'urgency' && 'dimension-btn-active')}
             onClick={() => setDimension('urgency')}
           >
